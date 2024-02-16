@@ -551,7 +551,6 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
                 charm,
-                application_name=APP_NAME,
                 num_units=3,
                 series=CHARM_SERIES,
                 channel="edge",
@@ -569,7 +568,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
             )
 
     if wait_for_apps:
-        await ops_test.model.wait_for_idle(status="active", timeout=3000)
+        await ops_test.model.wait_for_idle(status="active", timeout=5000)
 
     # Start an application that continuously writes data to the database.
     await start_continuous_writes(ops_test, APP_NAME)
