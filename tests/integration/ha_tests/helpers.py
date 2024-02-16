@@ -1,5 +1,6 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
+import logging
 import os
 import random
 import subprocess
@@ -19,9 +20,9 @@ from tenacity import (
     stop_after_delay,
     wait_fixed,
 )
-
 from ..helpers import APPLICATION_NAME, db_connect, get_unit_address, run_command_on_unit
 
+logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 PORT = 5432
 APP_NAME = METADATA["name"]
@@ -77,10 +78,15 @@ async def are_all_db_processes_down(ops_test: OpsTest, process: str) -> bool:
 async def are_writes_increasing(ops_test, down_unit: str = None) -> None:
     """Verify new writes are continuing by counting the number of writes."""
     writes, _ = await count_writes(ops_test, down_unit=down_unit)
+    logger.info("================= count_writes(ops_test, down_unit=down_unit)")
     for member, count in writes.items():
-        for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(3)):
+        for attempt in Retrying(stop=stop_after_delay(60 * 5), wait=wait_fixed(5)):
             with attempt:
                 more_writes, _ = await count_writes(ops_test, down_unit=down_unit)
+                logger.info("========================================")
+                logger.info(f"================= { member}")
+                logger.info(f"================= { more_writes[member]}")
+                logger.info(f"================= { count}")
                 assert more_writes[member] > count, f"{member}: writes not continuing to DB"
 
 

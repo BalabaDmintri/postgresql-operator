@@ -5,18 +5,11 @@ import asyncio
 import logging
 
 import pytest
+from juju import tag
 from pip._vendor import requests
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
-from ..helpers import (
-    CHARM_SERIES,
-    db_connect,
-    get_machine_from_unit,
-    get_password,
-    get_unit_address,
-    run_command_on_unit, scale_application,
-)
 from .conftest import APPLICATION_NAME
 from .helpers import (
     METADATA,
@@ -51,6 +44,14 @@ from .helpers import (
     storage_type,
     update_restart_condition,
     wait_network_restore,
+)
+from ..helpers import (
+    CHARM_SERIES,
+    db_connect,
+    get_machine_from_unit,
+    get_password,
+    get_unit_address,
+    run_command_on_unit, scale_application, tag_storage,
 )
 
 logger = logging.getLogger(__name__)
@@ -543,14 +544,14 @@ async def test_network_cut_without_ip_change(
     await is_cluster_updated(ops_test, primary_name)
 
 @pytest.mark.group(1)
-async def test_deploy_zero_units(ops_test: OpsTest):
+async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
     """Scale the database to zero units and scale up again."""
     wait_for_apps = False
     if not await app_name(ops_test):
         wait_for_apps = True
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
-                APP_NAME,
+                charm,
                 application_name=APP_NAME,
                 num_units=3,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
@@ -579,18 +580,18 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await are_writes_increasing(ops_test)
 
     unit_ip_addresses = []
-    storage_id_list = []
     primary_name = await get_primary(ops_test, APP_NAME)
     primary_storage = ""
+    storage_id_list = []
     for unit in ops_test.model.applications[APP_NAME].units:
         # Save IP addresses of units
         unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
 
         # Save detached storage ID
-        if primary_name != unit.name:
-            storage_id_list.append(storage_id(ops_test, unit.name))
-        else:
+        if primary_name == unit.name:
             primary_storage = storage_id(ops_test, unit.name)
+        else:
+            storage_id_list.append(storage_id(ops_test, unit.name))
 
     # Scale the database to zero units.
     logger.info("scaling database to zero units")
@@ -601,18 +602,30 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         try:
             resp = requests.get(f"http://{unit_ip}:8008")
             assert resp.status_code != 200, f"status code = {resp.status_code}, message = {resp.text}"
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             assert True, f"unit host = http://{unit_ip}:8008, all units shutdown"
         except Exception as e:
             assert False, f"{e} unit host = http://{unit_ip}:8008, something went wrong"
 
     # Scale the database to one unit.
     logger.info("scaling database to one unit")
-    await add_unit_with_storage(ops_test, storage=primary_storage, app=APP_NAME)
+    await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
+    await ops_test.model.wait_for_idle(
+        status="active",
+        timeout=3500,
+    )
+
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
     # Scale the database to three units.
+    logger.info("scale the database to three units")
     for store_id in storage_id_list:
-        await add_unit_with_storage(ops_test, storage=store_id, app=APP_NAME)
+        await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(store_id)])
+    await ops_test.model.wait_for_idle(
+        status="active",
+        timeout=3000,
+    )
+    logger.info("checking whether writes are increasing")
     await check_writes(ops_test)
+

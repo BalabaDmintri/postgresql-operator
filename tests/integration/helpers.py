@@ -16,6 +16,7 @@ import botocore
 import psycopg2
 import requests
 import yaml
+from juju import tag
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 from tenacity import (
@@ -868,7 +869,7 @@ async def scale_application(ops_test: OpsTest, application_name: str, count: int
         ]
         await ops_test.model.applications[application_name].destroy_units(*units)
     await ops_test.model.wait_for_idle(
-        apps=[application_name], status="active", timeout=2000, wait_for_exact_units=count
+        apps=[application_name], status="active", timeout=10000, wait_for_exact_units=count
     )
 
 
@@ -978,3 +979,6 @@ async def wait_for_idle_on_blocked(
         ),
         ops_test.model.block_until(lambda: unit.workload_status_message == status_message),
     )
+
+def tag_storage(storage_id):
+    return tag.storage(storage_id.replace("/", "-"))

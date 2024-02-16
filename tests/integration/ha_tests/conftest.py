@@ -21,6 +21,12 @@ from .helpers import (
 )
 
 
+@pytest.fixture(scope="module")
+async def charm(ops_test: OpsTest):
+    """Build the charm-under-test."""
+    # Build charm from local source folder.
+    return await ops_test.build_charm(".")
+
 @pytest.fixture()
 async def continuous_writes(ops_test: OpsTest) -> None:
     """Deploy the charm that makes continuous writes to PostgreSQL."""

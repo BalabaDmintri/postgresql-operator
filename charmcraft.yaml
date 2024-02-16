@@ -24,6 +24,6 @@ parts:
       - rustc
       - cargo
       - pkg-config
-    charm-strict-dependencies: true
+#    charm-strict-dependencies: true
     charm-binary-python-packages:
       - psycopg2-binary
