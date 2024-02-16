@@ -78,7 +78,6 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
                 charm,
                 num_units=3,
                 series=CHARM_SERIES,
-                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
             )
     # Deploy the continuous writes application charm if it wasn't already deployed.
@@ -554,7 +553,6 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
                 charm,
                 application_name=APP_NAME,
                 num_units=3,
-                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 series=CHARM_SERIES,
                 channel="edge",
             )
