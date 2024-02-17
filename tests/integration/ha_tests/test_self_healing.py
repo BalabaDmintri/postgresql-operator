@@ -553,6 +553,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
                 charm,
                 num_units=3,
                 series=CHARM_SERIES,
+                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 channel="edge",
             )
 
