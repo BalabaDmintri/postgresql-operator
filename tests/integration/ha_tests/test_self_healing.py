@@ -551,7 +551,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
                 charm,
-                num_units=1,
+                num_units=3,
                 series=CHARM_SERIES,
                 channel="edge",
             )
