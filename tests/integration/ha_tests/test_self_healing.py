@@ -557,15 +557,15 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
             )
 
     # Deploy the continuous writes application charm if it wasn't already deployed.
-    # if not await app_name(ops_test, APPLICATION_NAME):
-    #     wait_for_apps = True
-    #     async with ops_test.fast_forward():
-    #         await ops_test.model.deploy(
-    #             APPLICATION_NAME,
-    #             application_name=APPLICATION_NAME,
-    #             series=CHARM_SERIES,
-    #             channel="edge",
-    #         )
+    if not await app_name(ops_test, APPLICATION_NAME):
+        wait_for_apps = True
+        async with ops_test.fast_forward():
+            await ops_test.model.deploy(
+                APPLICATION_NAME,
+                application_name=APPLICATION_NAME,
+                series=CHARM_SERIES,
+                channel="edge",
+            )
 
     if wait_for_apps:
         await ops_test.model.wait_for_idle(status="active", timeout=5000)
@@ -575,7 +575,6 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
     primary_name = await get_primary(ops_test, APP_NAME)
     for unit in ops_test.model.applications[APP_NAME].units:
         # Save IP addresses of units
-        logger.info(f"================ ${ops_test.model.units.get(unit.name).public_address}   =======================")
         unit_ip_addresses.append(ops_test.model.units.get(unit.name).public_address)
 
         # Save detached storage ID
@@ -584,60 +583,59 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
         else:
             storage_id_list.append(storage_id(ops_test, unit.name))
 
-    logger.info(f"================ ${unit_ip_addresses}   =======================")
-    # # Start an application that continuously writes data to the database.
-    # await start_continuous_writes(ops_test, APP_NAME)
-    #
-    # logger.info("checking whether writes are increasing")
-    # await are_writes_increasing(ops_test)
-    #
-    # unit_ip_addresses = []
-    # primary_name = await get_primary(ops_test, APP_NAME)
-    # primary_storage = ""
-    # storage_id_list = []
-    # for unit in ops_test.model.applications[APP_NAME].units:
-    #     # Save IP addresses of units
-    #     unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
-    #
-    #     # Save detached storage ID
-    #     if primary_name == unit.name:
-    #         primary_storage = storage_id(ops_test, unit.name)
-    #     else:
-    #         storage_id_list.append(storage_id(ops_test, unit.name))
-    #
-    # # Scale the database to zero units.
-    # logger.info("scaling database to zero units")
-    # await scale_application(ops_test, APP_NAME, 0)
-    #
-    # # Checking shutdown units
-    # for unit_ip in unit_ip_addresses:
-    #     try:
-    #         resp = requests.get(f"http://{unit_ip}:8008")
-    #         assert resp.status_code != 200, f"status code = {resp.status_code}, message = {resp.text}"
-    #     except requests.exceptions.ConnectionError:
-    #         assert True, f"unit host = http://{unit_ip}:8008, all units shutdown"
-    #     except Exception as e:
-    #         assert False, f"{e} unit host = http://{unit_ip}:8008, something went wrong"
-    #
-    # # Scale the database to one unit.
-    # logger.info("scaling database to one unit")
-    # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
-    # await ops_test.model.wait_for_idle(
-    #     status="active",
-    #     timeout=3500,
-    # )
-    #
-    # logger.info("checking whether writes are increasing")
-    # await are_writes_increasing(ops_test)
-    #
-    # # Scale the database to three units.
-    # logger.info("scale the database to three units")
-    # for store_id in storage_id_list:
-    #     await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(store_id)])
-    # await ops_test.model.wait_for_idle(
-    #     status="active",
-    #     timeout=3000,
-    # )
-    # logger.info("checking whether writes are increasing")
-    # await check_writes(ops_test)
-    #
+    # Start an application that continuously writes data to the database.
+    await start_continuous_writes(ops_test, APP_NAME)
+
+    logger.info("checking whether writes are increasing")
+    await are_writes_increasing(ops_test)
+
+    unit_ip_addresses = []
+    primary_name = await get_primary(ops_test, APP_NAME)
+    primary_storage = ""
+    storage_id_list = []
+    for unit in ops_test.model.applications[APP_NAME].units:
+        # Save IP addresses of units
+        unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
+
+        # Save detached storage ID
+        if primary_name == unit.name:
+            primary_storage = storage_id(ops_test, unit.name)
+        else:
+            storage_id_list.append(storage_id(ops_test, unit.name))
+
+    # Scale the database to zero units.
+    logger.info("scaling database to zero units")
+    await scale_application(ops_test, APP_NAME, 0)
+
+    # Checking shutdown units
+    for unit_ip in unit_ip_addresses:
+        try:
+            resp = requests.get(f"http://{unit_ip}:8008")
+            assert resp.status_code != 200, f"status code = {resp.status_code}, message = {resp.text}"
+        except requests.exceptions.ConnectionError:
+            assert True, f"unit host = http://{unit_ip}:8008, all units shutdown"
+        except Exception as e:
+            assert False, f"{e} unit host = http://{unit_ip}:8008, something went wrong"
+
+    # Scale the database to one unit.
+    logger.info("scaling database to one unit")
+    await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
+    await ops_test.model.wait_for_idle(
+        status="active",
+        timeout=3500,
+    )
+
+    logger.info("checking whether writes are increasing")
+    await are_writes_increasing(ops_test)
+
+    # Scale the database to three units.
+    logger.info("scale the database to three units")
+    for store_id in storage_id_list:
+        await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(store_id)])
+    await ops_test.model.wait_for_idle(
+        status="active",
+        timeout=3000,
+    )
+    logger.info("checking whether writes are increasing")
+    await check_writes(ops_test)
+
