@@ -24,6 +24,9 @@ parts:
       - rustc
       - cargo
       - pkg-config
+      - pgconnstr
+      - boto3
+      - tenacity
     charm-strict-dependencies: true
     charm-binary-python-packages:
       - psycopg2-binary
