@@ -3,10 +3,10 @@
 # See LICENSE file for licensing details.
 import asyncio
 import logging
+import urllib
 
 import pytest
 import urllib3
-from juju import tag
 from pip._vendor import requests
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_delay, wait_fixed
@@ -612,7 +612,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
     # Checking shutdown units
     for unit_ip in unit_ip_addresses:
         try:
-            resp = urllib3.request(method="GET", url=f"http://{unit_ip}:8008")
+            resp = requests.request(method="GET", url=f"http://{unit_ip}:8008")
             assert resp.status_code != 200, f"status code = {resp.status_code}, message = {resp.text}"
         except requests.exceptions.ConnectionError:
             assert True, f"unit host = http://{unit_ip}:8008, all units shutdown"
