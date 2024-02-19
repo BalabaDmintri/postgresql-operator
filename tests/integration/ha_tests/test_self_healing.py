@@ -623,7 +623,8 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
     logger.info("scaling database to one unit")
     logger.info(f"=========================   {primary_storage} =================")
     logger.info(f"=========================  tag_storage {tag_storage(primary_storage)} =================")
-    await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
+    # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
+    await ops_test.model.applications[APP_NAME].add_unit()
     await ops_test.model.wait_for_idle(
         status="active",
         timeout=3500,
@@ -634,10 +635,11 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
 
     # Scale the database to three units.
     logger.info("scale the database to three units")
-    for store_id in storage_id_list:
-        logger.info(f"=========================   {store_id} =================")
-        logger.info(f"========================= tag_storage=  {tag_storage(store_id)} =================")
-        await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(store_id)])
+    # for store_id in storage_id_list:
+    #     logger.info(f"=========================   {store_id} =================")
+    #     logger.info(f"========================= tag_storage=  {tag_storage(store_id)} =================")
+        # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(store_id)])
+    await ops_test.model.applications[APP_NAME].add_unit(count=2)
     await ops_test.model.wait_for_idle(
         status="active",
         timeout=3000,
