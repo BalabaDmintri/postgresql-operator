@@ -3,14 +3,21 @@
 # See LICENSE file for licensing details.
 import asyncio
 import logging
-import urllib
 
+import psycopg2
 import pytest
-import urllib3
 from pip._vendor import requests
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
+from ..helpers import (
+    CHARM_SERIES,
+    db_connect,
+    get_machine_from_unit,
+    get_password,
+    get_unit_address,
+    run_command_on_unit, scale_application, build_connection_string, FIRST_DATABASE_RELATION_NAME,
+)
 from .conftest import APPLICATION_NAME
 from .helpers import (
     METADATA,
@@ -46,14 +53,6 @@ from .helpers import (
     update_restart_condition,
     wait_network_restore,
 )
-from ..helpers import (
-    CHARM_SERIES,
-    db_connect,
-    get_machine_from_unit,
-    get_password,
-    get_unit_address,
-    run_command_on_unit, scale_application, tag_storage,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +78,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
                 charm,
                 num_units=3,
                 series=CHARM_SERIES,
+                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
             )
     # Deploy the continuous writes application charm if it wasn't already deployed.
@@ -147,7 +147,7 @@ async def test_storage_re_use(ops_test, continuous_writes):
 @pytest.mark.group(1)
 @pytest.mark.parametrize("process", DB_PROCESSES)
 async def test_kill_db_process(
-    ops_test: OpsTest, process: str, continuous_writes, primary_start_timeout
+        ops_test: OpsTest, process: str, continuous_writes, primary_start_timeout
 ) -> None:
     # Locate primary unit.
     app = await app_name(ops_test)
@@ -175,7 +175,7 @@ async def test_kill_db_process(
 @pytest.mark.group(1)
 @pytest.mark.parametrize("process", DB_PROCESSES)
 async def test_freeze_db_process(
-    ops_test: OpsTest, process: str, continuous_writes, primary_start_timeout
+        ops_test: OpsTest, process: str, continuous_writes, primary_start_timeout
 ) -> None:
     # Locate primary unit.
     app = await app_name(ops_test)
@@ -213,7 +213,7 @@ async def test_freeze_db_process(
 @pytest.mark.group(1)
 @pytest.mark.parametrize("process", DB_PROCESSES)
 async def test_restart_db_process(
-    ops_test: OpsTest, process: str, continuous_writes, primary_start_timeout
+        ops_test: OpsTest, process: str, continuous_writes, primary_start_timeout
 ) -> None:
     # Locate primary unit.
     app = await app_name(ops_test)
@@ -242,12 +242,12 @@ async def test_restart_db_process(
 @pytest.mark.parametrize("process", DB_PROCESSES)
 @pytest.mark.parametrize("signal", ["SIGTERM", "SIGKILL"])
 async def test_full_cluster_restart(
-    ops_test: OpsTest,
-    process: str,
-    signal: str,
-    continuous_writes,
-    reset_restart_condition,
-    loop_wait,
+        ops_test: OpsTest,
+        process: str,
+        signal: str,
+        continuous_writes,
+        reset_restart_condition,
+        loop_wait,
 ) -> None:
     """This tests checks that a cluster recovers from a full cluster restart.
 
@@ -311,10 +311,10 @@ async def test_full_cluster_restart(
 @pytest.mark.group(1)
 @pytest.mark.unstable
 async def test_forceful_restart_without_data_and_transaction_logs(
-    ops_test: OpsTest,
-    continuous_writes,
-    primary_start_timeout,
-    wal_settings,
+        ops_test: OpsTest,
+        continuous_writes,
+        primary_start_timeout,
+        wal_settings,
 ) -> None:
     """A forceful restart with deleted data and without transaction logs (forced clone)."""
     app = await app_name(ops_test)
@@ -472,7 +472,7 @@ async def test_network_cut(ops_test: OpsTest, continuous_writes, primary_start_t
 @pytest.mark.group(1)
 @pytest.mark.unstable
 async def test_network_cut_without_ip_change(
-    ops_test: OpsTest, continuous_writes, primary_start_timeout
+        ops_test: OpsTest, continuous_writes, primary_start_timeout
 ):
     """Completely cut and restore network (situation when the unit IP doesn't change)."""
     # Locate primary unit.
@@ -543,67 +543,50 @@ async def test_network_cut_without_ip_change(
 
     await is_cluster_updated(ops_test, primary_name)
 
+
 @pytest.mark.group(1)
-async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
+async def test_deploy_zero_units(ops_test: OpsTest):
     """Scale the database to zero units and scale up again."""
-    wait_for_apps = False
-    if not await app_name(ops_test):
-        wait_for_apps = True
-        async with ops_test.fast_forward():
-            await ops_test.model.deploy(
-                charm,
-                num_units=3,
-                series=CHARM_SERIES,
-                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
-                channel="edge",
-            )
-
-    # Deploy the continuous writes application charm if it wasn't already deployed.
-    if not await app_name(ops_test, APPLICATION_NAME):
-        wait_for_apps = True
-        async with ops_test.fast_forward():
-            await ops_test.model.deploy(
-                APPLICATION_NAME,
-                application_name=APPLICATION_NAME,
-                series=CHARM_SERIES,
-                channel="edge",
-            )
-
-    if wait_for_apps:
-        await ops_test.model.wait_for_idle(status="active", timeout=5000)
-
-    unit_ip_addresses = []
-    storage_id_list = []
-    primary_name = await get_primary(ops_test, APP_NAME)
-    for unit in ops_test.model.applications[APP_NAME].units:
-        # Save IP addresses of units
-        unit_ip_addresses.append(ops_test.model.units.get(unit.name).public_address)
-
-        # Save detached storage ID
-        if primary_name == unit.name:
-            primary_storage = storage_id(ops_test, unit.name)
-        else:
-            storage_id_list.append(storage_id(ops_test, unit.name))
+    app = await app_name(ops_test, APP_NAME)
 
     # Start an application that continuously writes data to the database.
-    await start_continuous_writes(ops_test, APP_NAME)
+    await start_continuous_writes(ops_test, app)
 
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
+    connection_string = await build_connection_string(
+        ops_test, APPLICATION_NAME, FIRST_DATABASE_RELATION_NAME
+    )
+
+    # Connect to the database.
+    # Create test data
+    with psycopg2.connect(connection_string) as connection:
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            # Check that it's possible to write and read data from the database that
+            # was created for the application.
+            cursor.execute("DROP TABLE IF EXISTS test;")
+            cursor.execute("CREATE TABLE test(data TEXT);")
+            cursor.execute("INSERT INTO test(data) VALUES('some data');")
+            cursor.execute("SELECT data FROM test;")
+            data = cursor.fetchone()
+            assert data[0] == "some data"
+    connection.close()
+
     unit_ip_addresses = []
+    storage_id_list = []
     primary_name = await get_primary(ops_test, APP_NAME)
     primary_storage = ""
-    storage_id_list = []
     for unit in ops_test.model.applications[APP_NAME].units:
         # Save IP addresses of units
         unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
 
         # Save detached storage ID
-        if primary_name == unit.name:
-            primary_storage = storage_id(ops_test, unit.name)
-        else:
+        if primary_name != unit.name:
             storage_id_list.append(storage_id(ops_test, unit.name))
+        else:
+            primary_storage = storage_id(ops_test, unit.name)
 
     # Scale the database to zero units.
     logger.info("scaling database to zero units")
@@ -612,38 +595,46 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm: str):
     # Checking shutdown units
     for unit_ip in unit_ip_addresses:
         try:
-            resp = requests.request(method="GET", url=f"http://{unit_ip}:8008")
+            resp = requests.get(f"http://{unit_ip}:8008")
             assert resp.status_code != 200, f"status code = {resp.status_code}, message = {resp.text}"
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as e:
             assert True, f"unit host = http://{unit_ip}:8008, all units shutdown"
         except Exception as e:
             assert False, f"{e} unit host = http://{unit_ip}:8008, something went wrong"
 
     # Scale the database to one unit.
     logger.info("scaling database to one unit")
-    logger.info(f"=========================   {primary_storage} =================")
-    logger.info(f"=========================  tag_storage {tag_storage(primary_storage)} =================")
-    # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
-    await ops_test.model.applications[APP_NAME].add_unit()
-    await ops_test.model.wait_for_idle(
-        status="active",
-        timeout=3500,
-    )
-
+    await ops_test.model.applications[app].add_unit(attach_storage=[primary_storage])
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
     # Scale the database to three units.
-    logger.info("scale the database to three units")
-    # for store_id in storage_id_list:
-    #     logger.info(f"=========================   {store_id} =================")
-    #     logger.info(f"========================= tag_storage=  {tag_storage(store_id)} =================")
-        # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(store_id)])
-    await ops_test.model.applications[APP_NAME].add_unit(count=2)
-    await ops_test.model.wait_for_idle(
-        status="active",
-        timeout=3000,
-    )
-    logger.info("checking whether writes are increasing")
-    await check_writes(ops_test)
+    await ops_test.model.applications[app].add_unit()
 
+    # Connect to the database.
+    # Create test data
+    with psycopg2.connect(connection_string) as connection:
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            # Check that it's possible to write and read data from the database that
+            # was created for the application.
+            cursor.execute("SELECT data FROM test;")
+            data = cursor.fetchone()
+            assert data[0] == "some data"
+    connection.close()
+
+    # Scale the database to three units.
+    await ops_test.model.applications[app].add_unit()
+    # Connect to the database.
+    # Create test data
+    with psycopg2.connect(connection_string) as connection:
+        connection.autocommit = True
+        with connection.cursor() as cursor:
+            # Check that it's possible to write and read data from the database that
+            # was created for the application.
+            cursor.execute("SELECT data FROM test;")
+            data = cursor.fetchone()
+            assert data[0] == "some data"
+    connection.close()
+
+    await check_writes(ops_test)
