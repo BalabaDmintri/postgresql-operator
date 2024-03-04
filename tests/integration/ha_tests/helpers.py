@@ -78,15 +78,10 @@ async def are_all_db_processes_down(ops_test: OpsTest, process: str) -> bool:
 async def are_writes_increasing(ops_test, down_unit: str = None) -> None:
     """Verify new writes are continuing by counting the number of writes."""
     writes, _ = await count_writes(ops_test, down_unit=down_unit)
-    logger.info("================= count_writes(ops_test, down_unit=down_unit)")
     for member, count in writes.items():
         for attempt in Retrying(stop=stop_after_delay(60 * 5), wait=wait_fixed(5)):
             with attempt:
                 more_writes, _ = await count_writes(ops_test, down_unit=down_unit)
-                logger.info("========================================")
-                logger.info(f"================= { member}")
-                logger.info(f"================= { more_writes[member]}")
-                logger.info(f"================= { count}")
                 assert more_writes[member] > count, f"{member}: writes not continuing to DB"
 
 
