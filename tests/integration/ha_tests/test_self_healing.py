@@ -547,10 +547,37 @@ async def test_network_cut_without_ip_change(
 @pytest.mark.group(1)
 async def test_deploy_zero_units(ops_test: OpsTest):
     """Scale the database to zero units and scale up again."""
-    app = await app_name(ops_test, APP_NAME)
+    wait_for_apps = False
+    # It is possible for users to provide their own cluster for HA testing. Hence, check if there
+    # is a pre-existing cluster.
+    if not await app_name(ops_test):
+        wait_for_apps = True
+        charm = await ops_test.build_charm(".")
+        async with ops_test.fast_forward():
+            await ops_test.model.deploy(
+                charm,
+                num_units=3,
+                series=CHARM_SERIES,
+                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+                config={"profile": "testing"},
+            )
+    # Deploy the continuous writes application charm if it wasn't already deployed.
+    if not await app_name(ops_test, APPLICATION_NAME):
+        wait_for_apps = True
+        async with ops_test.fast_forward():
+            await ops_test.model.deploy(
+                APPLICATION_NAME,
+                application_name=APPLICATION_NAME,
+                series=CHARM_SERIES,
+                channel="edge",
+            )
+
+    if wait_for_apps:
+        async with ops_test.fast_forward():
+            await ops_test.model.wait_for_idle(status="active", timeout=1500)
 
     # Start an application that continuously writes data to the database.
-    await start_continuous_writes(ops_test, app)
+    await start_continuous_writes(ops_test, APPLICATION_NAME)
 
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
@@ -604,12 +631,12 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to one unit.
     logger.info("scaling database to one unit")
-    await ops_test.model.applications[app].add_unit(attach_storage=[primary_storage])
+    await ops_test.model.applications[APPLICATION_NAME].add_unit(attach_storage=[primary_storage])
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
     # Scale the database to three units.
-    await ops_test.model.applications[app].add_unit()
+    await ops_test.model.applications[APPLICATION_NAME].add_unit()
 
     # Connect to the database.
     # Create test data
@@ -624,7 +651,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     connection.close()
 
     # Scale the database to three units.
-    await ops_test.model.applications[app].add_unit()
+    await ops_test.model.applications[APPLICATION_NAME].add_unit()
     # Connect to the database.
     # Create test data
     with psycopg2.connect(connection_string) as connection:
