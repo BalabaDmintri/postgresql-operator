@@ -584,7 +584,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     logger.info("=========   build_connection_string")
     connection_string = await build_connection_string(
-        ops_test, APPLICATION_NAME, FIRST_DATABASE_RELATION_NAME
+        ops_test, APP_NAME, FIRST_DATABASE_RELATION_NAME,
     )
 
     # Connect to the database.
