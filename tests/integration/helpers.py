@@ -63,7 +63,6 @@ async def build_connection_string(
         a PostgreSQL connection string
     """
     unit_name = f"{application_name}/0"
-    logger.info(f"=========  unit_name = {unit_name}")
     raw_data = (await ops_test.juju("show-unit", unit_name))[1]
     if not raw_data:
         raise ValueError(f"no unit info could be grabbed for {unit_name}")
@@ -76,13 +75,11 @@ async def build_connection_string(
         raise ValueError(
             f"no relation data could be grabbed on relation with endpoint {relation_name}"
         )
-    logger.info(f"=========  relation_data = {relation_data}")
     if remote_unit_name:
         data = relation_data[0]["related-units"][remote_unit_name]["data"]
     else:
         data = relation_data[0]["application-data"]
 
-    logger.info(f"=========  data = {data}")
     if read_only_endpoint:
         if data.get("standbys") is None:
             return None
