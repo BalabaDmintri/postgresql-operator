@@ -576,7 +576,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
-    await ops_test.juju("storage")
     # Start an application that continuously writes data to the database.
     await start_continuous_writes(ops_test, APP_NAME)
 
@@ -626,7 +625,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info("scaling database to zero units")
     await scale_application(ops_test, APP_NAME, 0)
 
-    await ops_test.juju("storage")
     # Checking shutdown units
     for unit_ip in unit_ip_addresses:
         try:
