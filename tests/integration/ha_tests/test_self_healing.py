@@ -16,7 +16,7 @@ from ..helpers import (
     get_machine_from_unit,
     get_password,
     get_unit_address,
-    run_command_on_unit, scale_application, build_connection_string, FIRST_DATABASE_RELATION_NAME,
+    run_command_on_unit, scale_application, FIRST_DATABASE_RELATION_NAME,
 )
 from .conftest import APPLICATION_NAME
 from .helpers import (
@@ -583,12 +583,12 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await are_writes_increasing(ops_test)
 
     primary_name = await get_primary(ops_test, APP_NAME)
+    password = await get_password(ops_test, primary_name)
+    address = get_unit_address(ops_test, primary_name)
     logger.info("=========   build_connection_string")
-    connection_string = await build_connection_string(
-        ops_test,
-        application_name=APP_NAME,
-        relation_name=FIRST_DATABASE_RELATION_NAME,
-        remote_unit_name=primary_name
+    connection_string = (
+        f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator'"
+        f" host='{address}' password='{password}' connect_timeout=10"
     )
 
     # Connect to the database.
