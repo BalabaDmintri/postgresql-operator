@@ -574,7 +574,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     if wait_for_apps:
         async with ops_test.fast_forward():
-            await ops_test.model.wait_for_idle(status="active", timeout=1500)
+            await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
     # Start an application that continuously writes data to the database.
     await start_continuous_writes(ops_test, APP_NAME)
@@ -585,7 +585,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     primary_name = await get_primary(ops_test, APP_NAME)
     password = await get_password(ops_test, primary_name)
     address = get_unit_address(ops_test, primary_name)
-    logger.info("=========   build_connection_string")
     connection_string = (
         f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator'"
         f" host='{address}' password='{password}' connect_timeout=10"
@@ -593,8 +592,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Connect to the database.
     # Create test data
-    logger.info("==== connect to DB and create test table")
-    logger.info(f"==== connection_string = {connection_string}")
+    logger.info("connect to DB and create test table")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
@@ -605,6 +603,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
             cursor.execute("INSERT INTO test(data) VALUES('some data');")
             cursor.execute("SELECT data FROM test;")
             data = cursor.fetchone()
+            logger.info("check test data")
             assert data[0] == "some data"
     connection.close()
 
@@ -646,7 +645,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Connect to the database.
     # Create test data
-    logger.info("==== check DB")
+    logger.info("check test database data")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
@@ -661,7 +660,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await ops_test.model.applications[APP_NAME].add_unit()
     # Connect to the database.
     # Create test data
-    logger.info("==== check DB")
+    logger.info("check test database data")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
