@@ -593,6 +593,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # Connect to the database.
     # Create test data
     logger.info("connect to DB and create test table")
+    logger.info(f"===================== connection_string = {connection_string}")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
@@ -643,6 +644,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # Connect to the database.
     # Create test data
     logger.info("check test database data")
+    logger.info(f"===================== connection_string = {connection_string}")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
@@ -658,6 +660,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # Connect to the database.
     # Create test data
     logger.info("check test database data")
+    logger.info(f"===================== connection_string = {connection_string}")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
