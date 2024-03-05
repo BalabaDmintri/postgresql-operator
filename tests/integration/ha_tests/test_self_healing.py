@@ -638,7 +638,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info("scaling database to one unit")
     await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
     logger.info("checking whether writes are increasing")
-    # await are_writes_increasing(ops_test)
+    await are_writes_increasing(ops_test)
 
     # Connect to the database.
     # Create test data
