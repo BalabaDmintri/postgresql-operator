@@ -625,6 +625,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info("scaling database to zero units")
     await scale_application(ops_test, APP_NAME, 0)
 
+    await ops_test.juju("storage")
     # Checking shutdown units
     for unit_ip in unit_ip_addresses:
         try:
