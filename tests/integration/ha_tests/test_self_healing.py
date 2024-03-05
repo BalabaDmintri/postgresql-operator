@@ -637,7 +637,9 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to one unit.
     logger.info("scaling database to one unit")
-    await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
+    await  add_unit_with_storage(ops_test, app=APP_NAME, storage=[tag_storage(primary_storage)])
+    await ops_test.model.wait_for_idle(status="active", timeout=3000)
+    # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
@@ -656,7 +658,8 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     connection.close()
 
     # Scale the database to three units.
-    await ops_test.model.applications[APP_NAME].add_unit()
+    await scale_application(ops_test,application_name=APP_NAME,count=2)
+    await ops_test.model.wait_for_idle(status="active", timeout=3000)
     # Connect to the database.
     # Create test data
     logger.info("check test database data")
