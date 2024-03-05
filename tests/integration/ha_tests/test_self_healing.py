@@ -582,9 +582,13 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
+    primary_name = await get_primary(ops_test, APP_NAME)
     logger.info("=========   build_connection_string")
     connection_string = await build_connection_string(
-        ops_test, APPLICATION_NAME, FIRST_DATABASE_RELATION_NAME,
+        ops_test,
+        application_name=APP_NAME,
+        relation_name=FIRST_DATABASE_RELATION_NAME,
+        remote_unit_name=primary_name
     )
 
     # Connect to the database.
@@ -606,7 +610,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     unit_ip_addresses = []
     storage_id_list = []
-    primary_name = await get_primary(ops_test, APP_NAME)
     primary_storage = ""
     for unit in ops_test.model.applications[APP_NAME].units:
         # Save IP addresses of units
