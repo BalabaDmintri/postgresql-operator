@@ -556,7 +556,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
                 charm,
-                num_units=1,
+                num_units=3,
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
@@ -593,7 +593,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # Connect to the database.
     # Create test data
     logger.info("connect to DB and create test table")
-    logger.info(f"===================== connection_string = {connection_string}")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
@@ -637,7 +636,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to one unit.
     logger.info("scaling database to one unit")
-    logger.info(f"=============================  primary_storage = {primary_storage}")
     await add_unit_with_storage(ops_test, app=APP_NAME, storage=primary_storage)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
     # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
@@ -647,7 +645,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # Connect to the database.
     # Create test data
     logger.info("check test database data")
-    logger.info(f"===================== connection_string = {connection_string}")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
@@ -664,7 +661,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # Connect to the database.
     # Create test data
     logger.info("check test database data")
-    logger.info(f"===================== connection_string = {connection_string}")
     with psycopg2.connect(connection_string) as connection:
         connection.autocommit = True
         with connection.cursor() as cursor:
