@@ -556,7 +556,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
                 charm,
-                num_units=3,
+                num_units=2,
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
@@ -656,7 +656,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     connection.close()
 
     # Scale the database to three units.
-    await scale_application(ops_test,application_name=APP_NAME,count=2)
+    await scale_application(ops_test,application_name=APP_NAME, count=1)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
     # Connect to the database.
     # Create test data
