@@ -583,7 +583,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await start_continuous_writes(ops_test, APP_NAME)
 
     logger.info("checking whether writes are increasing")
-    await are_writes_increasing(ops_test)
+    await are_writes_increasing(ops_test,primary_name)
 
     # Connect to the database.
     # Create test data
@@ -622,11 +622,11 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await add_unit_with_storage(ops_test, app=APP_NAME, storage=primary_storage)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
+    connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
     logger.info("checking whether writes are increasing")
-    await are_writes_increasing(ops_test)
+    await are_writes_increasing(ops_test, primary_name)
 
     logger.info("check test database data")
-    connection_string, _ = await get_db_connection(ops_test, dbname=dbname)
     assert await validate_test_data(connection_string)
 
     # Scale the database to three units.
