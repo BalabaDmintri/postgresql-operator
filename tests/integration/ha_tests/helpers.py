@@ -804,7 +804,7 @@ async def get_db_connection(ops_test, dbname, is_primary=True, replica_unit_name
         unit_name = replica_unit_name
         address = ops_test.model.applications[APP_NAME].units[unit_name].public_address
     connection_string = (
-        f"dbname='{dbname}_first_database' user='operator'"
+        f"dbname='{dbname}' user='operator'"
         f" host='{address}' password='{password}' connect_timeout=10"
     )
     return connection_string, unit_name

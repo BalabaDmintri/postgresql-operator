@@ -583,7 +583,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await start_continuous_writes(ops_test, APP_NAME)
 
     logger.info("checking whether writes are increasing")
-    await are_writes_increasing(ops_test,primary_name)
+    await are_writes_increasing(ops_test, primary_name)
 
     # Connect to the database.
     # Create test data
