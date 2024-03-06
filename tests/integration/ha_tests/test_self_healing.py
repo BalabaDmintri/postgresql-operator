@@ -636,7 +636,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     for unit in ops_test.model.applications[APP_NAME].units:
         if not await unit.is_leader_from_status():
             assert await reused_full_cluster_recovery_storage(ops_test, unit_name=unit.name
-                                                ), "attached storage not properly re-used by Postgresql."
+                                                              ), "attached storage not properly re-used by Postgresql."
             logger.info(f"check test database data of unit name {unit.name}")
             connection_string, _ = await get_db_connection(ops_test,
                                                            dbname=dbname,
