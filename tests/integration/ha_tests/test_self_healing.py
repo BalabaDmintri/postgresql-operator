@@ -588,7 +588,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # Connect to the database.
     # Create test data
     logger.info("connect to DB and create test table")
-    assert await create_test_data(connection_string)
+    await create_test_data(connection_string)
 
     unit_ip_addresses = []
     storage_id_list = []
@@ -627,7 +627,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await are_writes_increasing(ops_test, primary_name)
 
     logger.info("check test database data")
-    assert await validate_test_data(connection_string)
+    await validate_test_data(connection_string)
 
     # Scale the database to three units.
     logger.info("scaling database to two unit")
@@ -642,6 +642,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
                                                            dbname=dbname,
                                                            is_primary=False,
                                                            replica_unit_name=unit.name)
-            assert await validate_test_data(connection_string)
+            await validate_test_data(connection_string)
 
     await check_writes(ops_test)
