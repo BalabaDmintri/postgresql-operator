@@ -798,7 +798,7 @@ async def reused_full_cluster_recovery_storage(ops_test: OpsTest, unit_name) -> 
 
 async def get_db_connection(ops_test, dbname, is_primary=True, replica_unit_name=""):
     unit_name = await get_primary(ops_test, APP_NAME)
-    password = await get_password(ops_test, unit_name)
+    password = await get_password(ops_test, APP_NAME)
     address = get_unit_address(ops_test, unit_name)
     if not is_primary and unit_name != "":
         unit_name = replica_unit_name
