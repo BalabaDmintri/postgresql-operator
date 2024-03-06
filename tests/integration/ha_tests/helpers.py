@@ -364,10 +364,14 @@ async def get_password(ops_test: OpsTest, app: str, down_unit: str = None) -> st
     """
     # Can retrieve from any unit running unit, so we pick the first.
     unit_name = ""
+    logger.info(f"==========  {unit_name}")
+    logger.info(f"==========  {down_unit}")
     for unit in ops_test.model.applications[app].units:
         if unit.name != down_unit:
             unit_name = unit.name
             break
+    logger.info(f"++++++++++  {unit_name}")
+    logger.info(f"++++++++++  {down_unit}")
     action = await ops_test.model.units.get(unit_name).run_action("get-password")
     action = await action.wait()
     return action.results["password"]
