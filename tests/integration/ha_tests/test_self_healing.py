@@ -556,7 +556,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
                 charm,
-                num_units=2,
+                num_units=1,
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
