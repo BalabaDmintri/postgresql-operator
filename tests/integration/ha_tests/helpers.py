@@ -363,6 +363,7 @@ async def get_password(ops_test: OpsTest, app: str, down_unit: str = None) -> st
         string with the password stored on the peer relation databag.
     """
     # Can retrieve from any unit running unit, so we pick the first.
+    unit_name = ""
     for unit in ops_test.model.applications[app].units:
         if unit.name != down_unit:
             unit_name = unit.name
