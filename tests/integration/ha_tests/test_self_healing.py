@@ -576,14 +576,14 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
+    dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
+    connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
+
     # Start an application that continuously writes data to the database.
     await start_continuous_writes(ops_test, APP_NAME)
 
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
-
-    dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
-    connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
 
     # Connect to the database.
     # Create test data
