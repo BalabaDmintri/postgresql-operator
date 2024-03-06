@@ -51,7 +51,7 @@ from .helpers import (
     storage_id,
     storage_type,
     update_restart_condition,
-    wait_network_restore,
+    wait_network_restore, validate_test_data, create_test_data, get_db_connection,
 )
 
 logger = logging.getLogger(__name__)
@@ -582,30 +582,13 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
-    primary_name = await get_primary(ops_test, APP_NAME)
-    password = await get_password(ops_test, primary_name)
-    address = get_unit_address(ops_test, primary_name)
-    connection_string = (
-        f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator'"
-        f" host='{address}' password='{password}' connect_timeout=10"
-    )
+    dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
+    connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
 
     # Connect to the database.
     # Create test data
     logger.info("connect to DB and create test table")
-    with psycopg2.connect(connection_string) as connection:
-        connection.autocommit = True
-        with connection.cursor() as cursor:
-            # Check that it's possible to write and read data from the database that
-            # was created for the application.
-            cursor.execute("DROP TABLE IF EXISTS test;")
-            cursor.execute("CREATE TABLE test(data TEXT);")
-            cursor.execute("INSERT INTO test(data) VALUES('some data');")
-            cursor.execute("SELECT data FROM test;")
-            data = cursor.fetchone()
-            logger.info("check test data")
-            assert data[0] == "some data"
-    connection.close()
+    assert await create_test_data(connection_string)
 
     unit_ip_addresses = []
     storage_id_list = []
@@ -638,37 +621,27 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info("scaling database to one unit")
     await add_unit_with_storage(ops_test, app=APP_NAME, storage=primary_storage)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
-    # await ops_test.model.applications[APP_NAME].add_unit(attach_storage=[tag_storage(primary_storage)])
+
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
 
-    # Connect to the database.
-    # Create test data
     logger.info("check test database data")
-    with psycopg2.connect(connection_string) as connection:
-        connection.autocommit = True
-        with connection.cursor() as cursor:
-            # Check that it's possible to write and read data from the database that
-            # was created for the application.
-            cursor.execute("SELECT data FROM test;")
-            data = cursor.fetchone()
-            assert data[0] == "some data"
-    connection.close()
+    connection_string, _ = await get_db_connection(ops_test, dbname=dbname)
+    assert await validate_test_data(connection_string)
 
     # Scale the database to three units.
-    await scale_application(ops_test,application_name=APP_NAME, count=1)
+    logger.info("scaling database to two unit")
+    await scale_application(ops_test, application_name=APP_NAME, count=2)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
-    # Connect to the database.
-    # Create test data
-    logger.info("check test database data")
-    with psycopg2.connect(connection_string) as connection:
-        connection.autocommit = True
-        with connection.cursor() as cursor:
-            # Check that it's possible to write and read data from the database that
-            # was created for the application.
-            cursor.execute("SELECT data FROM test;")
-            data = cursor.fetchone()
-            assert data[0] == "some data"
-    connection.close()
+    for unit in ops_test.model.applications[APP_NAME].units:
+        if not await unit.is_leader_from_status():
+            assert await reused_replica_storage(ops_test, unit_name=unit.name
+                                                ), "attached storage not properly re-used by Postgresql."
+            logger.info(f"check test database data of unit name {unit.name}")
+            connection_string, _ = await get_db_connection(ops_test,
+                                                           dbname=dbname,
+                                                           is_primary=False,
+                                                           replica_unit_name=unit.name)
+            assert await validate_test_data(connection_string)
 
     await check_writes(ops_test)
