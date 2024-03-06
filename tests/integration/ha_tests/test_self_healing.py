@@ -51,7 +51,7 @@ from .helpers import (
     storage_id,
     storage_type,
     update_restart_condition,
-    wait_network_restore, validate_test_data, create_test_data, get_db_connection,
+    wait_network_restore, validate_test_data, create_test_data, get_db_connection, reused_full_cluster_recovery_storage,
 )
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ async def test_storage_re_use(ops_test, continuous_writes):
     )
     new_unit = await add_unit_with_storage(ops_test, app, unit_storage_id)
 
-    assert await reused_replica_storage(
+    assert await reused_full_cluster_recovery_storage(
         ops_test, new_unit.name
     ), "attached storage not properly re-used by Postgresql."
 
