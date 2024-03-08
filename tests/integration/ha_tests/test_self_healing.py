@@ -598,7 +598,7 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     logger.info(f"============= {APP_NAME} host = {host}")
     modern_interface_connect = (f"dbname='{APPLICATION_NAME.replace('-','_')}_first_database' user='operator' "
                                 f"host='{host}'"
-                                f" password='{password}' connect_timeout=10")
+                                f" password='{password}11' connect_timeout=10")
 
     logger.info(f"============= {APP_NAME} connect = {modern_interface_connect}")
     for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
