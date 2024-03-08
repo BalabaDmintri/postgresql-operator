@@ -595,7 +595,7 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     replica_connection_string = await build_connection_string(
         ops_test,
         APP_NAME,
-        "first-database",
+        "database",
         read_only_endpoint=True,
     )
 
