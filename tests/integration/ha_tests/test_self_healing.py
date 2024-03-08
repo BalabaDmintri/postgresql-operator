@@ -596,7 +596,7 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
         ops_test,
         APP_NAME,
         "database",
-        read_only_endpoint=True,
+        remote_unit_name=f"{APPLICATION_NAME}/0"
     )
 
     logger.info(f"============  replica_connection_string: {replica_connection_string}")
