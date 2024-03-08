@@ -14,7 +14,7 @@ from ..helpers import (
     get_machine_from_unit,
     get_password,
     get_unit_address,
-    run_command_on_unit,
+    run_command_on_unit, build_connection_string,
 )
 from .conftest import APPLICATION_NAME
 from .helpers import (
@@ -586,10 +586,17 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
-    config = await ops_test.model.get_config()
-    logger.info(f"============  config: {config}")
 
     await ops_test.model.relate("mailman3-core", f"{APP_NAME}:db")
     await ops_test.model.relate(APP_NAME, f"{APPLICATION_NAME}:first-database")
 
     await ops_test.model.wait_for_idle(status="active", timeout=1000)
+
+    replica_connection_string = await build_connection_string(
+        ops_test,
+        APP_NAME,
+        "first-database",
+        read_only_endpoint=True,
+    )
+
+    logger.info(f"============  replica_connection_string: {replica_connection_string}")
