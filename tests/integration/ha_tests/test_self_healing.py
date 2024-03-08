@@ -586,7 +586,8 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
-    # dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
+    config = await ops_test.model.get_config()
+    logger.info(f"============  config: {config}")
 
     await ops_test.model.relate("mailman3-core", f"{APP_NAME}:db")
     await ops_test.model.relate(APP_NAME, f"{APPLICATION_NAME}:first-database")
