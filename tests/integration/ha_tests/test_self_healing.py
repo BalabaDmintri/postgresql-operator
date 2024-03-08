@@ -606,7 +606,9 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
             psycopg2.connect(modern_interface_connect)
             # with pytest.raises(psycopg2.OperationalError):
 
+    logger.info(f"============= mailman3-core ")
     host = get_unit_address(ops_test, "mailman3-core/0")
+    logger.info(f"============= mailman3-core pass")
     password = await get_password(ops_test, "mailman3-core/0")
     logger.info(f"============= mailman3-core  password = {password}")
     logger.info(f"============= mailman3-core host = {host}")
