@@ -608,8 +608,6 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
 
     logger.info(f"============= mailman3-core ")
     host = get_unit_address(ops_test, "mailman3-core/0")
-    logger.info(f"============= mailman3-core pass")
-    password = await get_password(ops_test, "mailman3-core/0")
     logger.info(f"============= mailman3-core  password = {password}")
     logger.info(f"============= mailman3-core host = {host}")
     legacy_interface_connect = (f"dbname='mailman3' user='operator' host='{host}' password='{password}' "
