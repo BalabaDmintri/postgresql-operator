@@ -610,19 +610,15 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     host = get_unit_address(ops_test, "mailman3-core/0")
     logger.info(f"============= mailman3-core  password = {password}")
     logger.info(f"============= mailman3-core host = {host}")
-    legacy_interface_connect = (f"dbname='mailman3' user='operator' host='{host}' password='{password}' "
-                                f"connect_timeout=10")
-    logger.info(f"============= mailman3-core connect = {legacy_interface_connect}")
     database_unit_name = ops_test.model.applications[APP_NAME].units[0].name
-    replica_connection_string = await build_connection_string(
+    legacy_interface_connect = await build_connection_string(
         ops_test,
         "mailman3-core",
         "db",
-        read_only_endpoint=True,
         remote_unit_name=database_unit_name,
     )
-    logger.info(f"============= mailman3-core = {replica_connection_string}")
+    logger.info(f"============= mailman3-core = {legacy_interface_connect}")
     for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
         with attempt:
-            with psycopg2.connect(replica_connection_string) as connection:
+            with psycopg2.connect(legacy_interface_connect) as connection:
                 assert connection.status == psycopg2.extensions.STATUS_READY
