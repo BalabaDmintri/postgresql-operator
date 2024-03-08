@@ -36,7 +36,6 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 DATABASE_APP_NAME = METADATA["name"]
 STORAGE_PATH = METADATA["storage"]["pgdata"]["location"]
 APPLICATION_NAME = "postgresql-test-app"
-logger = logging.getLogger(__name__)
 
 
 async def build_connection_string(
@@ -66,7 +65,6 @@ async def build_connection_string(
         raise ValueError(f"no unit info could be grabbed for {unit_name}")
     data = yaml.safe_load(raw_data)
     # Filter the data based on the relation name.
-    logger.info(f"==============   data = {data}")
     relation_data = [
         v for v in data[unit_name]["relation-info"] if v["related-endpoint"] == relation_name
     ]

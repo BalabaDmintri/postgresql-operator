@@ -4,6 +4,7 @@
 import asyncio
 import logging
 
+import psycopg2
 import pytest
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_delay, wait_fixed
@@ -586,17 +587,26 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
-
     await ops_test.model.relate("mailman3-core", f"{APP_NAME}:db")
     await ops_test.model.relate(APP_NAME, f"{APPLICATION_NAME}:first-database")
 
     await ops_test.model.wait_for_idle(status="active", timeout=1000)
 
-    replica_connection_string = await build_connection_string(
-        ops_test,
-        APP_NAME,
-        "database",
-        remote_unit_name=f"{APPLICATION_NAME}/0"
-    )
+    host = get_unit_address(ops_test, f"{APP_NAME}/0")
+    password = await get_password(ops_test, f"{APP_NAME}/0")
+    modern_interface_connect = (f"dbname='{APPLICATION_NAME.replace('-','_')}_first_database' user='operator' host='{host}'"
+                                f" password='{password}' connect_timeout=10")
 
-    logger.info(f"============  replica_connection_string: {replica_connection_string}")
+    for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
+        with attempt:
+            with pytest.raises(psycopg2.OperationalError):
+                psycopg2.connect(modern_interface_connect)
+
+    host = get_unit_address(ops_test, "mailman3-core/0")
+    password = await get_password(ops_test, "mailman3-core/0")
+    legacy_interface_connect = (f"dbname='mailman3' user='operator' host='{host}' password='{password}' "
+                                f"connect_timeout=10")
+    for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
+        with attempt:
+            with pytest.raises(psycopg2.OperationalError):
+                psycopg2.connect(legacy_interface_connect)
