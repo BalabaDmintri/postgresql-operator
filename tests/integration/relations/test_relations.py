@@ -52,9 +52,8 @@ async def test_deploy_charms(ops_test: OpsTest, charm):
             ops_test.model.deploy(
                 MAILMAN3_CORE_APP_NAME,
                 application_name=MAILMAN3_CORE_APP_NAME,
-                num_units=1,
-                series=CHARM_SERIES,
-                config={"profile": "testing"},
+                channel="stable",
+                config={"hostname": "example.org"},
             ),
         )
 
