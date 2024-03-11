@@ -102,7 +102,7 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     logger.info(f"==== remove relation {APPLICATION_APP_NAME}")
     async with ops_test.fast_forward():
         await ops_test.model.applications[APP_NAME].remove_relation(
-            f"{APP_NAME}", f"{APPLICATION_APP_NAME}:first-database"
+            f"{APP_NAME}:{DATABASE_RELATION}", f"{APPLICATION_APP_NAME}:{FIRST_DATABASE_RELATION}"
         )
         await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
         for attempt in Retrying(stop=stop_after_delay(60 * 5), wait=wait_fixed(10)):
