@@ -14,6 +14,7 @@ from pytest_operator.plugin import OpsTest, FileResource
 from tenacity import Retrying, stop_after_delay, wait_fixed
 
 from tests.integration.helpers import CHARM_SERIES, DATABASE_APP_NAME, METADATA, get_unit_address, get_password
+from tests.integration.relations.helpers import get_legacy_db_connection_str
 from tests.integration.relations.new_relations.helpers import build_connection_string
 from tests.integration.relations.new_relations.test_new_relations import APPLICATION_APP_NAME
 
@@ -81,7 +82,8 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
 
     database_unit_name = ops_test.model.applications[APP_NAME].units[0].name
     logger.info(f"  ====================  database_unit_name  ={database_unit_name}")
-    legacy_interface_connect = await build_connection_string(ops_test, MAILMAN3_CORE_APP_NAME, DB_RELATION)
+    legacy_interface_connect = await get_legacy_db_connection_str(ops_test, MAILMAN3_CORE_APP_NAME, DB_RELATION,
+                                                                  remote_unit_name=f"{APP_NAME}/0")
     logger.info(f"============  legacy_interface_connect= {legacy_interface_connect}")
     for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
         with attempt:
