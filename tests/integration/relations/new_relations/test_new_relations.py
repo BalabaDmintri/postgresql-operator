@@ -12,8 +12,8 @@ import pytest
 import yaml
 from pytest_operator.plugin import OpsTest
 
-from ..helpers import CHARM_SERIES, assert_sync_standbys, scale_application
-from ..juju_ import juju_major_version
+from tests.integration.helpers import CHARM_SERIES, assert_sync_standbys, scale_application
+from tests.integration.juju_ import juju_major_version
 from .helpers import (
     build_connection_string,
     check_relation_data_existence,
