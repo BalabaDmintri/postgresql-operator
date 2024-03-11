@@ -80,6 +80,7 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
                 assert connection.status == psycopg2.extensions.STATUS_READY
 
     database_unit_name = ops_test.model.applications[APP_NAME].units[0].name
+    logger.info(f"  ====================  database_unit_name  ={database_unit_name}")
     legacy_interface_connect = await build_connection_string(ops_test, MAILMAN3_CORE_APP_NAME, DB_RELATION)
     logger.info(f"============  legacy_interface_connect= {legacy_interface_connect}")
     for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
