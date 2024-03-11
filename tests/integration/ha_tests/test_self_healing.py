@@ -15,7 +15,7 @@ from ..helpers import (
     get_machine_from_unit,
     get_password,
     get_unit_address,
-    run_command_on_unit, build_connection_string,
+    run_command_on_unit, build_connection_string,build_relation_connection_string,
 )
 from .conftest import APPLICATION_NAME
 from .helpers import (
@@ -575,28 +575,29 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
                 channel="edge",
             )
 
-    # if not await app_name(ops_test, "mailman3-core"):
-    #     await ops_test.model.deploy(
-    #         "mailman3-core",
-    #         channel="stable",
-    #         application_name="mailman3-core",
-    #         config={"hostname": "example.org"},
-    #     )
+    if not await app_name(ops_test, "mailman3-core"):
+        await ops_test.model.deploy(
+            "mailman3-core",
+            channel="stable",
+            application_name="mailman3-core",
+            config={"hostname": "example.org"},
+        )
 
     if wait_for_apps:
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
-    # await ops_test.model.relate("mailman3-core", f"{APP_NAME}:db")
+    await ops_test.model.relate("mailman3-core", f"{APP_NAME}:db")
     await ops_test.model.relate(APP_NAME, f"{APPLICATION_NAME}:first-database")
 
     await ops_test.model.wait_for_idle(status="active", timeout=1000)
 
     host = get_unit_address(ops_test, f"{APP_NAME}/0")
     password = await get_password(ops_test, f"{APP_NAME}/0")
-    modern_interface_connect = (f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator' "
-                                f"host='{host}'"
-                                f" password='{password}' connect_timeout=10")
+    # modern_interface_connect = (f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator' "
+    #                             f"host='{host}'"
+    #                             f" password='{password}' connect_timeout=10")
+    modern_interface_connect = await build_relation_connection_string(ops_test, APPLICATION_APP_NAME, FIRST_DATABASE_RELATION_NAME)
 
     for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
         with attempt:
