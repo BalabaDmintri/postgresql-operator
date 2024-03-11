@@ -597,7 +597,7 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     # modern_interface_connect = (f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator' "
     #                             f"host='{host}'"
     #                             f" password='{password}' connect_timeout=10")
-    modern_interface_connect = await build_relation_connection_string(ops_test, APPLICATION_APP_NAME, FIRST_DATABASE_RELATION_NAME)
+    modern_interface_connect = await build_relation_connection_string(ops_test, APPLICATION_NAME, "first-database")
 
     for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
         with attempt:
