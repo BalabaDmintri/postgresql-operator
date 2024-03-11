@@ -2,12 +2,14 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 import json
+import logging
 from typing import Dict, Optional
 
 import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import RetryError, Retrying, stop_after_attempt, wait_exponential
 
+logger = logging.getLogger(__name__)
 
 async def get_juju_secret(ops_test: OpsTest, secret_uri: str) -> Dict[str, str]:
     """Retrieve juju secret."""
@@ -74,6 +76,7 @@ async def build_connection_string(
         relation_id,
         relation_alias,
     )
+    logger.info(f" =============  {endpoints}")
     host = endpoints.split(",")[0].split(":")[0]
 
     # Build the complete connection string to connect to the database.
