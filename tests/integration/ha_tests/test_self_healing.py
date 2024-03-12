@@ -604,7 +604,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to three units.
     logger.info("scaling database to two unit")
-    await scale_application(ops_test, application_name=app, count=3)
+    await scale_application(ops_test, application_name=app, count=2)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
     for unit in ops_test.model.applications[app].units:
         if not await unit.is_leader_from_status():
