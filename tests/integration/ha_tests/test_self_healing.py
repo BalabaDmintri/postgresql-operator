@@ -547,40 +547,13 @@ async def test_network_cut_without_ip_change(
 @pytest.mark.group(1)
 async def test_deploy_zero_units(ops_test: OpsTest):
     """Scale the database to zero units and scale up again."""
-    # It is possible for users to provide their own cluster for HA testing. Hence, check if there
-    # is a pre-existing cluster.
-    wait_for_apps = False
-    if not await app_name(ops_test):
-        wait_for_apps = True
-        charm = await ops_test.build_charm(".")
-        async with ops_test.fast_forward():
-            await ops_test.model.deploy(
-                charm,
-                num_units=1,
-                series=CHARM_SERIES,
-                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
-                config={"profile": "testing"},
-            )
-    # Deploy the continuous writes application charm if it wasn't already deployed.
-    if not await app_name(ops_test, APPLICATION_NAME):
-        wait_for_apps = True
-        async with ops_test.fast_forward():
-            await ops_test.model.deploy(
-                APPLICATION_NAME,
-                application_name=APPLICATION_NAME,
-                series=CHARM_SERIES,
-                channel="edge",
-            )
-
-    if wait_for_apps:
-        async with ops_test.fast_forward():
-            await ops_test.model.wait_for_idle(status="active", timeout=3000)
+    app = await app_name(ops_test)
 
     dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
     connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
 
     # Start an application that continuously writes data to the database.
-    await start_continuous_writes(ops_test, APP_NAME)
+    await start_continuous_writes(ops_test, app)
 
     logger.info("checking whether writes are increasing")
     await are_writes_increasing(ops_test)
@@ -593,7 +566,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     unit_ip_addresses = []
     storage_id_list = []
     primary_storage = ""
-    for unit in ops_test.model.applications[APP_NAME].units:
+    for unit in ops_test.model.applications[app].units:
         # Save IP addresses of units
         unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
 
@@ -605,7 +578,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to zero units.
     logger.info("scaling database to zero units")
-    await scale_application(ops_test, APP_NAME, 0)
+    await scale_application(ops_test, app, 0)
 
     # Checking shutdown units
     for unit_ip in unit_ip_addresses:
@@ -619,7 +592,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to one unit.
     logger.info("scaling database to one unit")
-    await add_unit_with_storage(ops_test, app=APP_NAME, storage=primary_storage)
+    await add_unit_with_storage(ops_test, app=app, storage=primary_storage)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
     connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
@@ -631,9 +604,9 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to three units.
     logger.info("scaling database to two unit")
-    await scale_application(ops_test, application_name=APP_NAME, count=2)
+    await scale_application(ops_test, application_name=app, count=2)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
-    for unit in ops_test.model.applications[APP_NAME].units:
+    for unit in ops_test.model.applications[app].units:
         if not await unit.is_leader_from_status():
             assert await reused_replica_storage(ops_test, unit_name=unit.name
                                                               ), "attached storage not properly re-used by Postgresql."
