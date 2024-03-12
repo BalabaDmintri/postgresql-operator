@@ -76,7 +76,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
                 charm,
-                num_units=3,
+                num_units=2,
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
@@ -559,7 +559,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await are_writes_increasing(ops_test)
 
     # Connect to the database.
-    # Create test data
+    # Create test data.
     logger.info("connect to DB and create test table")
     await create_test_data(connection_string)
 
@@ -580,7 +580,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info("scaling database to zero units")
     await scale_application(ops_test, app, 0)
 
-    # Checking shutdown units
+    # Checking shutdown units.
     for unit_ip in unit_ip_addresses:
         try:
             resp = requests.get(f"http://{unit_ip}:8008")
@@ -604,7 +604,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     # Scale the database to three units.
     logger.info("scaling database to two unit")
-    await scale_application(ops_test, application_name=app, count=2)
+    await scale_application(ops_test, application_name=app, count=3)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
     for unit in ops_test.model.applications[app].units:
         if not await unit.is_leader_from_status():
