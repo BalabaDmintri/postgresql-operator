@@ -44,6 +44,7 @@ class PostgreSQLProvider(Object):
             relation_name: the name of the relation
         """
         self.relation_name = relation_name
+        logger.info(f"============  __init__ relation_name = {relation_name}")
 
         super().__init__(charm, self.relation_name)
         self.framework.observe(
@@ -61,6 +62,7 @@ class PostgreSQLProvider(Object):
     def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
         """Generate password and handle user and database creation for the related application."""
         # Check for some conditions before trying to access the PostgreSQL instance.
+        logger.info(f"============  _on_database_requested")
         if not self.charm.unit.is_leader():
             return
 
@@ -123,10 +125,12 @@ class PostgreSQLProvider(Object):
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Correctly update the status."""
+        logger.info(f"============  _on_relation_broken")
         self._update_unit_status(event.relation)
 
     def oversee_users(self) -> None:
         """Remove users from database if their relations were broken."""
+        logger.info(f"============  oversee_users")
         if not self.charm.unit.is_leader():
             return
 
@@ -162,6 +166,7 @@ class PostgreSQLProvider(Object):
 
     def update_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read/write and read-only endpoints."""
+        logger.info(f"============  update_endpoints")
         if not self.charm.unit.is_leader():
             return
 
@@ -192,6 +197,7 @@ class PostgreSQLProvider(Object):
 
     def _update_unit_status(self, relation: Relation) -> None:
         """# Clean up Blocked status if it's due to extensions request."""
+        logger.info(f"============  _update_unit_status")
         if (
             self.charm.is_blocked
             and self.charm.unit.status.message == INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
@@ -205,6 +211,7 @@ class PostgreSQLProvider(Object):
         Args:
             relation_id: current relation to be skipped.
         """
+        logger.info(f"============  check_for_invalid_extra_user_roles")
         valid_privileges, valid_roles = self.charm.postgresql.list_valid_privileges_and_roles()
         for relation in self.charm.model.relations.get(self.relation_name, []):
             if relation.id == relation_id:
