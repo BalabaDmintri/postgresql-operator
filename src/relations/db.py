@@ -93,10 +93,9 @@ class DbProvides(Object):
 
         Generate password and handle user and database creation for the related application.
         """
-        logger.info(f" db--------------  len = {len(self.charm.client_relations)}")
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
-                self.charm.unit.status = BlockedStatus("--------------  to many interface")
+                self.charm.app.status = BlockedStatus("--------------  to many interface")
                 return
             logger.info(f" db--------------  relation.id = {relation.id}")
             logger.info(f" db--------------  relation.name = {relation.name}")
