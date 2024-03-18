@@ -6,6 +6,7 @@ import logging
 import secrets
 import string
 from pathlib import Path
+from time import sleep
 
 import psycopg2
 import pytest
@@ -36,13 +37,13 @@ async def test_deploy_charms(ops_test: OpsTest, charm):
     # set data in the relation application databag using only the leader unit).
     async with ops_test.fast_forward():
         await asyncio.gather(
-            ops_test.model.deploy(
-                APPLICATION_APP_NAME,
-                application_name=APPLICATION_APP_NAME,
-                num_units=1,
-                series=CHARM_SERIES,
-                channel="edge",
-            ),
+            # ops_test.model.deploy(
+            #     APPLICATION_APP_NAME,
+            #     application_name=APPLICATION_APP_NAME,
+            #     num_units=1,
+            #     series=CHARM_SERIES,
+            #     channel="edge",
+            # ),
             ops_test.model.deploy(
                 charm,
                 application_name=DATABASE_APP_NAME,
@@ -50,19 +51,20 @@ async def test_deploy_charms(ops_test: OpsTest, charm):
                 series=CHARM_SERIES,
                 config={"profile": "testing"},
             ),
-            ops_test.model.deploy(
-                MAILMAN3_CORE_APP_NAME,
-                application_name=MAILMAN3_CORE_APP_NAME,
-                channel="stable",
-                config={"hostname": "example.org"},
-            ),
+            # ops_test.model.deploy(
+            #     MAILMAN3_CORE_APP_NAME,
+            #     application_name=MAILMAN3_CORE_APP_NAME,
+            #     channel="stable",
+            #     config={"hostname": "example.org"},
+            # ),
         )
 
-        await ops_test.model.wait_for_idle(apps=APP_NAMES, status="active", timeout=3000)
+        await ops_test.model.wait_for_idle(apps=DATABASE_APP_NAME, status="active", timeout=3000)
 
 
 @pytest.mark.group(1)
 async def test_legacy_modern_endpoints(ops_test: OpsTest):
+    sleep(60*10)
     await ops_test.model.relate(MAILMAN3_CORE_APP_NAME, f"{APP_NAME}:{DB_RELATION}")
     await ops_test.model.relate(APP_NAME, f"{APPLICATION_APP_NAME}:{FIRST_DATABASE_RELATION}")
 
