@@ -143,6 +143,10 @@ class PostgreSQLProvider(Object):
             return
 
         # Retrieve the users from the active relations.
+        for relation_name, rel_list in self.model.relations:
+            logger.info(f"+++++++++++ {relation_name}")
+            logger.info(f"+++++++++++ {rel_list}")
+
         relations = [
             relation
             for relation_name, relations_list in self.model.relations.items()
