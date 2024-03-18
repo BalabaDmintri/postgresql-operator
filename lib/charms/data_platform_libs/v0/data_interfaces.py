@@ -1932,6 +1932,12 @@ class DatabaseProvides(DataProvides):
             return
         # Check which data has changed to emit customs events.
         diff = self._diff(event)
+        for relation in self.relations:
+            logger.info(f"--------------  id = {relation.id}")
+            logger.info(f"--------------  name = {relation.name}")
+            logger.info(f"--------------  active = {relation.active}")
+            logger.info(f"--------------  data = {relation.data}")
+            logger.info(f"--------------  app = {relation.app}")
 
         # Emit a database requested event if the setup key (database name and optional
         # extra user roles) was added to the relation databag by the application.
