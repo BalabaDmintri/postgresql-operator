@@ -1933,7 +1933,7 @@ class DatabaseProvides(DataProvides):
         logger.info(f" database--------------  len = {len(self.charm.client_relations)}")
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
-                self.charm.app.status = BlockedStatus("--------------  to many interface")
+                self.local_unit.status = BlockedStatus("-------------- database  to many interface")
                 return
             logger.info(f" database--------------  relation.id = {relation.id}")
             logger.info(f" database--------------  relation.name = {relation.name}")
