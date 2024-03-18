@@ -1930,15 +1930,13 @@ class DatabaseProvides(DataProvides):
         # Leader only
         if not self.local_unit.is_leader():
             return
+        for relation in self.charm.client_relations:
+            logger.info(f" database--------------  relation.id = {relation.id}")
+            logger.info(f" database--------------  relation.app = {relation.app}")
+            logger.info(f" database--------------  len(relation.units) = {len(relation.units)}")
+            logger.info(f" database --------------  relation.data = {relation.data}")
         # Check which data has changed to emit customs events.
         diff = self._diff(event)
-        logger.info(f"--------------  _on_relation_changed_event len = {len(self.charm.model.relations)}")
-        for relation in self.relations:
-            logger.info(f"--------------  id = {relation.id}")
-            logger.info(f"--------------  name = {relation.name}")
-            logger.info(f"--------------  active = {relation.active}")
-            logger.info(f"--------------  data = {relation.data}")
-            logger.info(f"--------------  app = {relation.app}")
 
         # Emit a database requested event if the setup key (database name and optional
         # extra user roles) was added to the relation databag by the application.

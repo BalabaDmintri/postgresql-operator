@@ -93,6 +93,11 @@ class DbProvides(Object):
 
         Generate password and handle user and database creation for the related application.
         """
+        for relation in self.charm.client_relations:
+            logger.info(f" db--------------  relation.id = {relation.id}")
+            logger.info(f" db--------------  relation.app = {relation.app}")
+            logger.info(f" db--------------  len(relation.units) = {len(relation.units)}")
+            logger.info(f" db --------------  relation.data = {relation.data}")
         # Check for some conditions before trying to access the PostgreSQL instance.
         if not self.charm.unit.is_leader():
             return
