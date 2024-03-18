@@ -149,9 +149,10 @@ class PostgreSQLProvider(Object):
             for relation in relations_list
             if relation_name in ALL_CLIENT_RELATIONS
         ]
+        logger.info(f"+++++++++++ len = {len(relations)}")
         for relation in relations:
             logger.info(f"+++++++++++ {relation.name}")
-            logger.info(f"+++++++++++ {relation}")
+            logger.info(f"+++++++++++ {relation.data}")
         relation_users = set()
         for relation in relations:
             username = f"relation-{relation.id}"
