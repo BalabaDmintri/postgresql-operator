@@ -1930,6 +1930,7 @@ class DatabaseProvides(DataProvides):
         # Leader only
         if not self.local_unit.is_leader():
             return
+        logger.info(f" database--------------  len = {len(self.charm.client_relations)}")
         for relation in self.charm.client_relations:
             logger.info(f" database--------------  relation.id = {relation.id}")
             logger.info(f" database--------------  relation.name = {relation.name}")
