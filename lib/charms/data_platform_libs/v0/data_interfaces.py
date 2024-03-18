@@ -1932,7 +1932,7 @@ class DatabaseProvides(DataProvides):
             return
         # Check which data has changed to emit customs events.
         diff = self._diff(event)
-        logger.info(f"--------------  _on_relation_changed_event len = {len(self.relations)}")
+        logger.info(f"--------------  _on_relation_changed_event len = {len(self.charm.model.relations)}")
         for relation in self.relations:
             logger.info(f"--------------  id = {relation.id}")
             logger.info(f"--------------  name = {relation.name}")
