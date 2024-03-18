@@ -35,6 +35,10 @@ ROLES_BLOCKING_MESSAGE = (
     "roles requested through relation, use postgresql_client interface instead"
 )
 
+ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE = (
+    "Please choose one endpoint to use. No need to relate all of them simultaneously!"
+)
+
 
 class DbProvides(Object):
     """Defines functionality for the 'provides' side of the 'db' relation.
@@ -95,13 +99,8 @@ class DbProvides(Object):
         """
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
-                self.charm.unit.status = BlockedStatus(EXTENSIONS_BLOCKING_MESSAGE)
+                self.charm.unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
                 return
-            logger.info(f" db--------------  relation.id = {relation.id}")
-            logger.info(f" db--------------  relation.name = {relation.name}")
-            logger.info(f" db--------------  relation.app = {relation.app}")
-            logger.info(f" db--------------  len(relation.units) = {len(relation.units)}")
-            logger.info(f" db --------------  relation.data = {relation.data}")
         # Check for some conditions before trying to access the PostgreSQL instance.
         if not self.charm.unit.is_leader():
             return

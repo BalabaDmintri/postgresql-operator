@@ -312,8 +312,6 @@ from ops.charm import (
 from ops.framework import EventSource, Object
 from ops.model import Application, ModelError, Relation, Unit, BlockedStatus
 
-from charms.postgresql_k8s.v0.postgresql import INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
-
 # The unique Charmhub library identifier, never change it
 LIBID = "6c3e6b6680d64e9c89e611d1a15f65be"
 
@@ -339,6 +337,11 @@ deleted - key that were deleted"""
 
 PROV_SECRET_PREFIX = "secret-"
 REQ_SECRET_FIELDS = "requested-secrets"
+
+ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE = (
+    "Please choose one endpoint to use. No need to relate all of them simultaneously!"
+)
+
 
 
 class SecretGroup(Enum):
@@ -1935,13 +1938,8 @@ class DatabaseProvides(DataProvides):
         logger.info(f" database--------------  len = {len(self.charm.client_relations)}")
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
-                self.local_unit.status = BlockedStatus(INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE)
+                self.local_unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
                 return
-            logger.info(f" database--------------  relation.id = {relation.id}")
-            logger.info(f" database--------------  relation.name = {relation.name}")
-            logger.info(f" database--------------  relation.app = {relation.app}")
-            logger.info(f" database--------------  len(relation.units) = {len(relation.units)}")
-            logger.info(f" database --------------  relation.data = {relation.data}")
         # Check which data has changed to emit customs events.
         diff = self._diff(event)
 
