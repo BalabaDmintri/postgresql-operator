@@ -59,7 +59,7 @@ async def test_deploy_charms(ops_test: OpsTest, charm):
             # ),
         )
 
-        await ops_test.model.wait_for_idle(apps=DATABASE_APP_NAME, status="active", timeout=3000)
+        await ops_test.model.wait_for_idle(apps=[APPLICATION_APP_NAME,DATABASE_APP_NAME], status="active", timeout=3000)
 
 
 @pytest.mark.group(1)
