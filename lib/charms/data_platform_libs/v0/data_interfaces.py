@@ -1932,6 +1932,7 @@ class DatabaseProvides(DataProvides):
             return
         for relation in self.charm.client_relations:
             logger.info(f" database--------------  relation.id = {relation.id}")
+            logger.info(f" database--------------  relation.name = {relation.name}")
             logger.info(f" database--------------  relation.app = {relation.app}")
             logger.info(f" database--------------  len(relation.units) = {len(relation.units)}")
             logger.info(f" database --------------  relation.data = {relation.data}")
