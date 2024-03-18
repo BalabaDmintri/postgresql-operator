@@ -312,6 +312,8 @@ from ops.charm import (
 from ops.framework import EventSource, Object
 from ops.model import Application, ModelError, Relation, Unit, BlockedStatus
 
+from charms.postgresql_k8s.v0.postgresql import INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
+
 # The unique Charmhub library identifier, never change it
 LIBID = "6c3e6b6680d64e9c89e611d1a15f65be"
 
@@ -1933,7 +1935,7 @@ class DatabaseProvides(DataProvides):
         logger.info(f" database--------------  len = {len(self.charm.client_relations)}")
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
-                self.local_unit.status = BlockedStatus("-------------- database  to many interface")
+                self.local_unit.status = BlockedStatus(INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE)
                 return
             logger.info(f" database--------------  relation.id = {relation.id}")
             logger.info(f" database--------------  relation.name = {relation.name}")

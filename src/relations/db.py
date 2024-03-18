@@ -95,7 +95,7 @@ class DbProvides(Object):
         """
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
-                self.charm.unit.status = BlockedStatus("-------------- db to many interface")
+                self.charm.unit.status = BlockedStatus(EXTENSIONS_BLOCKING_MESSAGE)
                 return
             logger.info(f" db--------------  relation.id = {relation.id}")
             logger.info(f" db--------------  relation.name = {relation.name}")
