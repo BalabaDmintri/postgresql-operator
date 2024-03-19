@@ -17,7 +17,7 @@ from charms.postgresql_k8s.v0.postgresql import (
     PostgreSQLGetPostgreSQLVersionError,
     PostgreSQLListUsersError,
 )
-from ops.charm import CharmBase, RelationBrokenEvent
+from ops.charm import CharmBase, RelationBrokenEvent, RelationChangedEvent
 from ops.framework import Object
 from ops.model import ActiveStatus, BlockedStatus, Relation
 
@@ -54,7 +54,7 @@ class PostgreSQLProvider(Object):
             charm.on[self.relation_name].relation_broken, self._on_relation_broken
         )
         self.framework.observe(
-            charm.on[relation_name].relation_changed,
+            charm.on[self.relation_name].relation_changed,
             self._on_relation_changed_event,
         )
 
