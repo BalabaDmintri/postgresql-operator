@@ -140,6 +140,7 @@ class PostgreSQLProvider(Object):
         logger.info(f" psql ----------------------------------   _check_relation_another_endpoint")
         """Checks if there are relations with other endpoints."""
         for relation in self.charm.client_relations:
+            logger.info(f" psql ----------------------------------   _check_relation_another_endpoint = {relation.name}")
             if relation.name != "database":
                 return True
         return False

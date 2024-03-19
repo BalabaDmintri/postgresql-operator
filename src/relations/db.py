@@ -94,8 +94,10 @@ class DbProvides(Object):
 
     def _check_relation_another_endpoint(self) -> bool:
         """Checks if there are relations with other endpoints."""
+        logger.info(f" db ===============================   _check_relation_another_endpoint")
         for relation in self.charm.client_relations:
             if relation.name not in ["db", "db-admin"]:
+                logger.info(f" db ===============================   _check_relation_another_endpoint = {relation.name}")
                 return True
         return False
 
