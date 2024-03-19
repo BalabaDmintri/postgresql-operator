@@ -338,11 +338,6 @@ deleted - key that were deleted"""
 PROV_SECRET_PREFIX = "secret-"
 REQ_SECRET_FIELDS = "requested-secrets"
 
-ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE = (
-    "Please choose one endpoint to use. No need to relate all of them simultaneously!"
-)
-
-
 
 class SecretGroup(Enum):
     """Secret groups as constants."""
@@ -1935,11 +1930,11 @@ class DatabaseProvides(DataProvides):
         # Leader only
         if not self.local_unit.is_leader():
             return
-        logger.info(f"database --------------  len = {self.relation_name}")
+        logger.info(f"data_interface +++++++++++++++++++  len = {self.relation_name}")
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
                 self.local_unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
-                logger.info(f"database --------------  local_unit.status  = {ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE}")
+                logger.info(f"data_interface +++++++++++++++++++  local_unit.status  = {ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE}")
                 return
         # Check which data has changed to emit customs events.
         diff = self._diff(event)

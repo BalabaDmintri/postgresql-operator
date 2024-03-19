@@ -3,7 +3,6 @@
 
 """Postgres client relation hooks & helpers."""
 
-
 import logging
 
 from charms.data_platform_libs.v0.data_interfaces import (
@@ -26,6 +25,10 @@ from constants import ALL_CLIENT_RELATIONS, APP_SCOPE, DATABASE_PORT
 from utils import new_password
 
 logger = logging.getLogger(__name__)
+
+ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE = (
+    "Please choose one endpoint to use. No need to relate all of them simultaneously!"
+)
 
 
 class PostgreSQLProvider(Object):
@@ -50,6 +53,10 @@ class PostgreSQLProvider(Object):
         self.framework.observe(
             charm.on[self.relation_name].relation_broken, self._on_relation_broken
         )
+        self.framework.observe(
+            charm.on[relation_name].relation_changed,
+            self._on_relation_changed_event,
+        )
 
         self.charm = charm
 
@@ -67,9 +74,9 @@ class PostgreSQLProvider(Object):
             return
 
         if (
-            "cluster_initialised" not in self.charm._peers.data[self.charm.app]
-            or not self.charm._patroni.member_started
-            or not self.charm.primary_endpoint
+                "cluster_initialised" not in self.charm._peers.data[self.charm.app]
+                or not self.charm._patroni.member_started
+                or not self.charm.primary_endpoint
         ):
             event.defer()
             logger.debug(
@@ -112,9 +119,9 @@ class PostgreSQLProvider(Object):
 
             self._update_unit_status(event.relation)
         except (
-            PostgreSQLCreateDatabaseError,
-            PostgreSQLCreateUserError,
-            PostgreSQLGetPostgreSQLVersionError,
+                PostgreSQLCreateDatabaseError,
+                PostgreSQLCreateUserError,
+                PostgreSQLGetPostgreSQLVersionError,
         ) as e:
             logger.exception(e)
             self.charm.unit.status = BlockedStatus(
@@ -127,6 +134,28 @@ class PostgreSQLProvider(Object):
         """Correctly update the status."""
         logger.info(f"database ============  _on_relation_broken")
         self._update_unit_status(event.relation)
+
+    def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
+        """Event emitted when the relation has changed."""
+        # Leader only
+        if not self.local_unit.is_leader():
+            return
+        logger.info(f" provide_psql --------------  len = {self.relation_name}")
+        for relation in self.charm.client_relations:
+            if self.relation_name != relation.name:
+                self.local_unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
+                logger.info(
+                    f" provide_psql --------------  local_unit.status  = {ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE}")
+                return
+        # Check which data has changed to emit customs events.
+        diff = self._diff(event)
+
+        # Emit a database requested event if the setup key (database name and optional
+        # extra user roles) was added to the relation databag by the application.
+        if "database" in diff.added:
+            getattr(self.on, "database_requested").emit(
+                event.relation, app=event.app, unit=event.unit
+            )
 
     def oversee_users(self) -> None:
         """Remove users from database if their relations were broken."""
@@ -201,12 +230,16 @@ class PostgreSQLProvider(Object):
 
     def _update_unit_status(self, relation: Relation) -> None:
         """# Clean up Blocked status if it's due to extensions request."""
-        logger.info(f"database ============  _update_unit_status")
+        logger.info(f"provide_psql ============  _update_unit_status")
         if (
-            self.charm.is_blocked
-            and self.charm.unit.status.message == INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
+                self.charm.is_blocked
+                and self.charm.unit.status.message == INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
         ):
             if not self.check_for_invalid_extra_user_roles(relation.id):
+                self.charm.unit.status = ActiveStatus()
+
+        if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
+            if self.relation_name not in self.charm.model.relations.items():
                 self.charm.unit.status = ActiveStatus()
 
     def check_for_invalid_extra_user_roles(self, relation_id: int) -> bool:
@@ -227,8 +260,8 @@ class PostgreSQLProvider(Object):
                 extra_user_roles = extra_user_roles.lower().split(",")
                 for extra_user_role in extra_user_roles:
                     if (
-                        extra_user_role not in valid_privileges
-                        and extra_user_role not in valid_roles
+                            extra_user_role not in valid_privileges
+                            and extra_user_role not in valid_roles
                     ):
                         return True
         return False
