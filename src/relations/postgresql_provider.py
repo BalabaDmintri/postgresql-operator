@@ -239,7 +239,9 @@ class PostgreSQLProvider(Object):
                 self.charm.unit.status = ActiveStatus()
 
         if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
-            if self.relation_name not in self.charm.model.relations.items():
+            relations = [relation_name for relation_name in self.charm.model.relations.items()]
+            logger.info(f" provide_psql ============ {relations}")
+            if self.relation_name not in relations:
                 self.charm.unit.status = ActiveStatus()
 
     def check_for_invalid_extra_user_roles(self, relation_id: int) -> bool:
