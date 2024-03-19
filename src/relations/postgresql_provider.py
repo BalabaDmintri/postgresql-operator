@@ -135,14 +135,12 @@ class PostgreSQLProvider(Object):
         logger.info(f" psql ----------------------------------   _on_relation_broken")
         self._update_unit_status(event.relation)
 
-
-    def _check_relation_another_endpoint(self) -> bool:
+    def _check_multiple_endpoints(self) -> bool:
         logger.info(f" psql ----------------------------------   _check_relation_another_endpoint")
         """Checks if there are relations with other endpoints."""
-        for relation in self.charm.client_relations:
-            logger.info(f" psql ----------------------------------   _check_relation_another_endpoint = {relation.name}")
-            if relation.name != "database":
-                return True
+        relation_names = [relation.name for relation in self.charm.client_relations]
+        if "database" in relation_names and len(relation_names) > 1:
+            return True
         return False
 
     def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
@@ -152,7 +150,7 @@ class PostgreSQLProvider(Object):
         if not self.charm.unit.is_leader():
             return
 
-        if self._check_relation_another_endpoint():
+        if self._check_multiple_endpoints():
             self.charm.unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
             return
         # Check which data has changed to emit customs events.
@@ -244,7 +242,8 @@ class PostgreSQLProvider(Object):
                 self.charm.unit.status = ActiveStatus()
 
         if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
-            if not self._check_relation_another_endpoint():
+            if not self._check_multiple_endpoints():
+                logger.info(f" psql ---------------------------------- not self._check_relation_another_endpoint")
                 self.charm.unit.status = ActiveStatus()
 
     def check_for_invalid_extra_user_roles(self, relation_id: int) -> bool:

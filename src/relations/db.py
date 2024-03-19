@@ -3,7 +3,6 @@
 
 """Library containing the implementation of the legacy db and db-admin relations."""
 
-
 import logging
 from typing import Iterable, List, Set, Tuple
 
@@ -22,7 +21,7 @@ from ops.framework import Object
 from ops.model import ActiveStatus, BlockedStatus, Relation, Unit
 from pgconnstr import ConnectionString
 
-from constants import APP_SCOPE, DATABASE_PORT, ALL_CLIENT_RELATIONS
+from constants import APP_SCOPE, DATABASE_PORT, ALL_CLIENT_RELATIONS, ALL_LEGACY_RELATIONS
 from utils import new_password
 
 logger = logging.getLogger(__name__)
@@ -92,15 +91,22 @@ class DbProvides(Object):
                         return True
         return False
 
-    def _check_relation_another_endpoint(self) -> bool:
-        """Checks if there are relations with other endpoints."""
-        logger.info(f" db ===============================   _check_relation_another_endpoint")
-        for relation in self.charm.client_relations:
-            if relation.name not in ["db", "db-admin"]:
-                logger.info(f" db ===============================   _check_relation_another_endpoint = {relation.name}")
+    def _check_exist_current_relation(self) -> bool:
+        for r in self.charm.client_relations:
+            if r in ALL_LEGACY_RELATIONS:
                 return True
         return False
 
+    def _check_relation_another_endpoint(self) -> bool:
+        """Checks if there are relations with other endpoints."""
+        logger.info(f" db ===============================   _check_relation_another_endpoint")
+
+        is_exist = self._check_exist_current_relation()
+        for relation in self.charm.client_relations:
+            if relation.name not in ALL_LEGACY_RELATIONS and is_exist:
+                logger.info(f" db ===============================   _check_relation_another_endpoint = {relation.name}")
+                return True
+        return False
 
     def _on_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle the legacy db/db-admin relation changed event.
@@ -117,9 +123,9 @@ class DbProvides(Object):
             return
 
         if (
-            "cluster_initialised" not in self.charm._peers.data[self.charm.app]
-            or not self.charm._patroni.member_started
-            or not self.charm.primary_endpoint
+                "cluster_initialised" not in self.charm._peers.data[self.charm.app]
+                or not self.charm._patroni.member_started
+                or not self.charm.primary_endpoint
         ):
             logger.debug(
                 "Deferring on_relation_changed: cluster not initialized, Patroni not started or primary endpoint not available"
@@ -243,9 +249,9 @@ class DbProvides(Object):
             return
 
         if (
-            "cluster_initialised" not in self.charm._peers.data[self.charm.app]
-            or not self.charm._patroni.member_started
-            or not self.charm.primary_endpoint
+                "cluster_initialised" not in self.charm._peers.data[self.charm.app]
+                or not self.charm._patroni.member_started
+                or not self.charm.primary_endpoint
         ):
             logger.debug(
                 "Deferring on_relation_departed: cluster not initialized, Patroni not started or primary endpoint not available"
@@ -269,10 +275,10 @@ class DbProvides(Object):
         # Check for some conditions before trying to access the PostgreSQL instance.
         logger.info(f" db ===============================   _on_relation_broken")
         if (
-            not self.charm.unit.is_leader()
-            or "cluster_initialised" not in self.charm._peers.data[self.charm.app]
-            or not self.charm._patroni.member_started
-            or not self.charm.primary_endpoint
+                not self.charm.unit.is_leader()
+                or "cluster_initialised" not in self.charm._peers.data[self.charm.app]
+                or not self.charm._patroni.member_started
+                or not self.charm.primary_endpoint
         ):
             logger.debug(
                 "Early exit on_relation_broken: Not leader, cluster not initialized, Patroni not started or no primary endpoint"
@@ -393,6 +399,7 @@ class DbProvides(Object):
     def _get_allowed_subnets(self, relation: Relation) -> str:
         """Build the list of allowed subnets as in the legacy charm."""
         logger.info(f" db ===============================   _get_allowed_subnets")
+
         def _comma_split(s) -> Iterable[str]:
             if s:
                 for b in s.split(","):
