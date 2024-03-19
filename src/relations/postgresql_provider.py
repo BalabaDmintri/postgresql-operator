@@ -154,7 +154,7 @@ class PostgreSQLProvider(Object):
         # Emit a database requested event if the setup key (database name and optional
         # extra user roles) was added to the relation databag by the application.
         if "database" in _diff.added:
-            getattr(self.on, "database_requested").emit(
+            getattr(self.database_provides.on, "database_requested").emit(
                 event.relation, app=event.app, unit=event.unit
             )
 
