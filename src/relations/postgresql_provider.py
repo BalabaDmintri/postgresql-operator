@@ -8,6 +8,7 @@ import logging
 from charms.data_platform_libs.v0.data_interfaces import (
     DatabaseProvides,
     DatabaseRequestedEvent,
+    diff,
 )
 from charms.postgresql_k8s.v0.postgresql import (
     INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE,
@@ -148,11 +149,11 @@ class PostgreSQLProvider(Object):
                     f" provide_psql --------------  local_unit.status  = {ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE}")
                 return
         # Check which data has changed to emit customs events.
-        diff = self._diff(event)
+        _diff = diff(event, self.charm.unit)
 
         # Emit a database requested event if the setup key (database name and optional
         # extra user roles) was added to the relation databag by the application.
-        if "database" in diff.added:
+        if "database" in _diff.added:
             getattr(self.on, "database_requested").emit(
                 event.relation, app=event.app, unit=event.unit
             )
