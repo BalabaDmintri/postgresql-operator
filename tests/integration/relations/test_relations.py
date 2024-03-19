@@ -90,26 +90,26 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     #     with attempt:
     #         with psycopg2.connect(modern_interface_connect) as connection:
     #             assert connection.status == psycopg2.extensions.STATUS_READY
-    #
-    # database_unit_name = ops_test.model.applications[APP_NAME].units[0].name
-    # logger.info(f"  ====================  database_unit_name  ={database_unit_name}")
-    # legacy_interface_connect = await get_legacy_db_connection_str(ops_test, MAILMAN3_CORE_APP_NAME, DB_RELATION,
-    #                                                               remote_unit_name=f"{APP_NAME}/0")
-    # logger.info(f"============  legacy_interface_connect= {legacy_interface_connect}")
-    # for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
-    #     with attempt:
-    #         with psycopg2.connect(legacy_interface_connect) as connection:
-    #             assert connection.status == psycopg2.extensions.STATUS_READY
-    #
-    # logger.info(f"==== remove relation mailman3-core")
-    # async with ops_test.fast_forward():
-    #     await ops_test.model.applications[APP_NAME].remove_relation(
-    #         f"{APP_NAME}:db", f"mailman3-core:db"
-    #     )
-    #     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
-    #     with pytest.raises(psycopg2.OperationalError):
-    #         psycopg2.connect(legacy_interface_connect)
-    #
+
+    database_unit_name = ops_test.model.applications[APP_NAME].units[0].name
+    logger.info(f"  ====================  database_unit_name  ={database_unit_name}")
+    legacy_interface_connect = await get_legacy_db_connection_str(ops_test, MAILMAN3_CORE_APP_NAME, DB_RELATION,
+                                                                  remote_unit_name=f"{APP_NAME}/0")
+    logger.info(f"============  legacy_interface_connect= {legacy_interface_connect}")
+    for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
+        with attempt:
+            with psycopg2.connect(legacy_interface_connect) as connection:
+                assert connection.status == psycopg2.extensions.STATUS_READY
+
+    logger.info(f"==== remove relation mailman3-core")
+    async with ops_test.fast_forward():
+        await ops_test.model.applications[APP_NAME].remove_relation(
+            f"{APP_NAME}:db", f"mailman3-core:db"
+        )
+        await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
+        with pytest.raises(psycopg2.OperationalError):
+            psycopg2.connect(legacy_interface_connect)
+
     # logger.info(f"==== remove relation {APPLICATION_APP_NAME}")
     # async with ops_test.fast_forward():
     #     await ops_test.model.applications[APP_NAME].remove_relation(

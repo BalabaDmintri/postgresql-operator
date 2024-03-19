@@ -136,18 +136,23 @@ class PostgreSQLProvider(Object):
         logger.info(f" provider_psql ++++++++++++++++  _on_relation_broken")
         self._update_unit_status(event.relation)
 
+
+    def _check_relation_another_endpoint(self) -> bool:
+        """Checks if there are relations with other endpoints."""
+        for relation in self.charm.client_relations:
+            if relation.name != "database":
+                return True
+        return False
+
     def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
         """Event emitted when the relation has changed."""
         # Leader only
         if not self.charm.unit.is_leader():
             return
-        logger.info(f" provide_psql --------------  len = {self.relation_name}")
-        for relation in self.charm.client_relations:
-            if self.relation_name != relation.name:
-                self.charm.unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
-                logger.info(
-                    f" provide_psql --------------  local_unit.status  = {ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE}")
-                return
+
+        if self._check_relation_another_endpoint():
+            self.charm.unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
+            return
         # Check which data has changed to emit customs events.
         _diff = diff(event, self.charm.unit)
 

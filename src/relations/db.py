@@ -92,19 +92,26 @@ class DbProvides(Object):
                         return True
         return False
 
+    def _check_relation_another_endpoint(self) -> bool:
+        """Checks if there are relations with other endpoints."""
+        for relation in self.charm.client_relations:
+            if relation.name not in ["db", "db-admin"]:
+                return True
+        return False
+
+
     def _on_relation_changed(self, event: RelationChangedEvent) -> None:
         """Handle the legacy db/db-admin relation changed event.
 
         Generate password and handle user and database creation for the related application.
         """
-        logger.info(f"db -------   relation_name = {self.relation_name}")
-        for relation in self.charm.client_relations:
-            if self.relation_name != relation.name:
-                self.charm.unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
-                logger.info(f"db -------    self.charm.unit.status = {ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE}")
-                return
+
         # Check for some conditions before trying to access the PostgreSQL instance.
         if not self.charm.unit.is_leader():
+            return
+
+        if self._check_relation_another_endpoint():
+            self.charm.unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
             return
 
         if (
