@@ -240,7 +240,7 @@ class PostgreSQLProvider(Object):
                 self.charm.unit.status = ActiveStatus()
 
         if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
-            for relation_name, relations_list in self.model.relations.items():
+            for relation_name, relations_list in self.charm.model.relations.items():
                 logger.info(f" provide_psql -------------------- relation_name = {relation_name}")
                 for relation in relations_list:
                     logger.info(f" provide_psql --------------------relation.name = {relation.name}")
