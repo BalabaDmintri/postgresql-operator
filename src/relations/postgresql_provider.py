@@ -252,6 +252,8 @@ class PostgreSQLProvider(Object):
             ]
             logger.info(f" provide_psql --------------------- {relations}")
             if self.relation_name not in relations:
+                logger.info(f" provide_psql --------------------- {self.relation_name}")
+                logger.info(f" provide_psql --------------------- {relations}")
                 self.charm.unit.status = ActiveStatus()
 
     def check_for_invalid_extra_user_roles(self, relation_id: int) -> bool:

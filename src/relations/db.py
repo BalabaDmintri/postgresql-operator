@@ -303,6 +303,8 @@ class DbProvides(Object):
             ]
             logger.info(f" db --------------------- {relations}")
             if self.relation_name not in relations:
+                logger.info(f" db --------------------- {self.relation_name}")
+                logger.info(f" db --------------------- {relations}")
                 self.charm.unit.status = ActiveStatus()
     def update_endpoints(self, relation: Relation = None) -> None:
         """Set the read/write and read-only endpoints."""
