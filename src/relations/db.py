@@ -22,10 +22,8 @@ from ops.framework import Object
 from ops.model import ActiveStatus, BlockedStatus, Relation, Unit
 from pgconnstr import ConnectionString
 
-from constants import APP_SCOPE, DATABASE_PORT
+from constants import APP_SCOPE, DATABASE_PORT, ALL_CLIENT_RELATIONS
 from utils import new_password
-
-from src.constants import ALL_CLIENT_RELATIONS
 
 logger = logging.getLogger(__name__)
 
