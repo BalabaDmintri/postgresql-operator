@@ -1555,6 +1555,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         relations = []
         for relation_name in ["database", "db", "db-admin"]:
             for relation in self.model.relations.get(relation_name, []):
+                logger.info(f" ----------------  relation = {relation.name}")
                 relations.append(relation)
         return relations
 
