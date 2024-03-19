@@ -70,7 +70,6 @@ class PostgreSQLProvider(Object):
     def _on_database_requested(self, event: DatabaseRequestedEvent) -> None:
         """Generate password and handle user and database creation for the related application."""
         # Check for some conditions before trying to access the PostgreSQL instance.
-        logger.info(f"============  _on_database_requested")
         if not self.charm.unit.is_leader():
             return
 
@@ -133,11 +132,12 @@ class PostgreSQLProvider(Object):
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Correctly update the status."""
-        logger.info(f" provider_psql ++++++++++++++++  _on_relation_broken")
+        logger.info(f" psql ----------------------------------   _on_relation_broken")
         self._update_unit_status(event.relation)
 
 
     def _check_relation_another_endpoint(self) -> bool:
+        logger.info(f" psql ----------------------------------   _check_relation_another_endpoint")
         """Checks if there are relations with other endpoints."""
         for relation in self.charm.client_relations:
             if relation.name != "database":
@@ -146,6 +146,7 @@ class PostgreSQLProvider(Object):
 
     def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
         """Event emitted when the relation has changed."""
+        logger.info(f" psql ----------------------------------   _on_relation_changed_event")
         # Leader only
         if not self.charm.unit.is_leader():
             return
@@ -165,7 +166,7 @@ class PostgreSQLProvider(Object):
 
     def oversee_users(self) -> None:
         """Remove users from database if their relations were broken."""
-        logger.info(f"database ============  oversee_users")
+        logger.info(f" psql ----------------------------------   oversee_users")
         if not self.charm.unit.is_leader():
             return
 
@@ -184,10 +185,7 @@ class PostgreSQLProvider(Object):
             for relation in relations_list
             if relation_name in ALL_CLIENT_RELATIONS
         ]
-        logger.info(f"+++++++++++ len = {len(relations)}")
-        for relation in relations:
-            logger.info(f"+++++++++++ {relation.name}")
-            logger.info(f"+++++++++++ {relation.data}")
+
         relation_users = set()
         for relation in relations:
             username = f"relation-{relation.id}"
@@ -205,7 +203,7 @@ class PostgreSQLProvider(Object):
 
     def update_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read/write and read-only endpoints."""
-        logger.info(f"database ============  update_endpoints")
+        logger.info(f" psql ----------------------------------   update_endpoints")
         if not self.charm.unit.is_leader():
             return
 
@@ -236,7 +234,7 @@ class PostgreSQLProvider(Object):
 
     def _update_unit_status(self, relation: Relation) -> None:
         """# Clean up Blocked status if it's due to extensions request."""
-        logger.info(f"provide_psql ============  _update_unit_status")
+        logger.info(f" psql ----------------------------------   _update_unit_status")
         if (
                 self.charm.is_blocked
                 and self.charm.unit.status.message == INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
@@ -245,29 +243,16 @@ class PostgreSQLProvider(Object):
                 self.charm.unit.status = ActiveStatus()
 
         if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
-            for relation_name, relations_list in self.charm.model.relations.items():
-                logger.info(f" provide_psql -------------------- relation_name = {relation_name}")
-                for relation in relations_list:
-                    logger.info(f" provide_psql --------------------relation.name = {relation.name}")
-            relations = [
-                relation.name
-                for relation_name, relations_list in self.model.relations.items()
-                for relation in relations_list
-                if relation_name in ALL_CLIENT_RELATIONS
-            ]
-            logger.info(f" provide_psql --------------------- {relations}")
-            if self.relation_name not in relations:
-                logger.info(f" provide_psql --------------------- {self.relation_name}")
-                logger.info(f" provide_psql --------------------- {relations}")
+            if not self._check_relation_another_endpoint():
                 self.charm.unit.status = ActiveStatus()
 
     def check_for_invalid_extra_user_roles(self, relation_id: int) -> bool:
+        logger.info(f" psql ----------------------------------   check_for_invalid_extra_user_roles")
         """Checks if there are relations with invalid extra user roles.
 
         Args:
             relation_id: current relation to be skipped.
         """
-        logger.info(f"database ============  check_for_invalid_extra_user_roles")
         valid_privileges, valid_roles = self.charm.postgresql.list_valid_privileges_and_roles()
         for relation in self.charm.model.relations.get(self.relation_name, []):
             if relation.id == relation_id:

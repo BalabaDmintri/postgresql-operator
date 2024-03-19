@@ -105,7 +105,7 @@ class DbProvides(Object):
 
         Generate password and handle user and database creation for the related application.
         """
-
+        logger.info(f" db ===============================   _on_relation_changed")
         # Check for some conditions before trying to access the PostgreSQL instance.
         if not self.charm.unit.is_leader():
             return
@@ -229,6 +229,7 @@ class DbProvides(Object):
         # This is needed because of https://bugs.launchpad.net/juju/+bug/1979811.
         # Neither peer relation data nor stored state are good solutions,
         # just a temporary solution.
+        logger.info(f" db ===============================   _on_relation_departed")
         if event.departing_unit == self.charm.unit:
             self.charm._peers.data[self.charm.unit].update({"departing": "True"})
             # Just run the rest of the logic for departing of remote units.
@@ -264,7 +265,7 @@ class DbProvides(Object):
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation."""
         # Check for some conditions before trying to access the PostgreSQL instance.
-        logger.info(f"db --------------   _on_relation_broken")
+        logger.info(f" db ===============================   _on_relation_broken")
         if (
             not self.charm.unit.is_leader()
             or "cluster_initialised" not in self.charm._peers.data[self.charm.app]
@@ -290,6 +291,7 @@ class DbProvides(Object):
 
     def _update_unit_status(self, relation: Relation) -> None:
         """Clean up Blocked status if it's due to extensions request."""
+        logger.info(f" db ===============================   _update_unit_status")
         if self.charm.is_blocked and self.charm.unit.status.message in [
             EXTENSIONS_BLOCKING_MESSAGE,
             ROLES_BLOCKING_MESSAGE,
@@ -298,23 +300,12 @@ class DbProvides(Object):
                 self.charm.unit.status = ActiveStatus()
 
         if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
-            for relation_name, relations_list in self.charm.model.relations.items():
-                logger.info(f" db -------------------- relation_name = {relation_name}")
-                for relation in relations_list:
-                    logger.info(f" db --------------------relation.name = {relation.name}")
-            relations = [
-                relation.name
-                for relation_name, relations_list in self.model.relations.items()
-                for relation in relations_list
-                if relation_name in ALL_CLIENT_RELATIONS
-            ]
-            logger.info(f" db --------------------- {relations}")
-            if self.relation_name not in relations:
-                logger.info(f" db --------------------- {self.relation_name}")
-                logger.info(f" db --------------------- {relations}")
+            if not self._check_relation_another_endpoint():
                 self.charm.unit.status = ActiveStatus()
+
     def update_endpoints(self, relation: Relation = None) -> None:
         """Set the read/write and read-only endpoints."""
+        logger.info(f" db ===============================   update_endpoints")
         # Get the current relation or all the relations
         # if this is triggered by another type of event.
         relations = [relation] if relation else self.model.relations[self.relation_name]
@@ -399,7 +390,7 @@ class DbProvides(Object):
 
     def _get_allowed_subnets(self, relation: Relation) -> str:
         """Build the list of allowed subnets as in the legacy charm."""
-
+        logger.info(f" db ===============================   _get_allowed_subnets")
         def _comma_split(s) -> Iterable[str]:
             if s:
                 for b in s.split(","):
@@ -415,6 +406,7 @@ class DbProvides(Object):
         return ",".join(sorted(subnets))
 
     def _get_allowed_units(self, relation: Relation) -> str:
+        logger.info(f" db ===============================   _get_allowed_units")
         """Build the list of allowed units as in the legacy charm."""
         return " ".join(
             sorted(
