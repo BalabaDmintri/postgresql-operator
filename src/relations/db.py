@@ -97,9 +97,11 @@ class DbProvides(Object):
 
         Generate password and handle user and database creation for the related application.
         """
+        logger.info(f"db -------   relation_name = {self.relation_name}")
         for relation in self.charm.client_relations:
             if self.relation_name != relation.name:
                 self.charm.unit.status = BlockedStatus(ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE)
+                logger.info(f"db -------    self.charm.unit.status = {ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE}")
                 return
         # Check for some conditions before trying to access the PostgreSQL instance.
         if not self.charm.unit.is_leader():
@@ -255,6 +257,7 @@ class DbProvides(Object):
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Remove the user created for this relation."""
         # Check for some conditions before trying to access the PostgreSQL instance.
+        logger.info(f"db --------------   _on_relation_broken")
         if (
             not self.charm.unit.is_leader()
             or "cluster_initialised" not in self.charm._peers.data[self.charm.app]

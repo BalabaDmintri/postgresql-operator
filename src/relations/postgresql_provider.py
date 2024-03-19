@@ -125,12 +125,12 @@ class PostgreSQLProvider(Object):
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Correctly update the status."""
-        logger.info(f"============  _on_relation_broken")
+        logger.info(f"database ============  _on_relation_broken")
         self._update_unit_status(event.relation)
 
     def oversee_users(self) -> None:
         """Remove users from database if their relations were broken."""
-        logger.info(f"============  oversee_users")
+        logger.info(f"database ============  oversee_users")
         if not self.charm.unit.is_leader():
             return
 
@@ -170,7 +170,7 @@ class PostgreSQLProvider(Object):
 
     def update_endpoints(self, event: DatabaseRequestedEvent = None) -> None:
         """Set the read/write and read-only endpoints."""
-        logger.info(f"============  update_endpoints")
+        logger.info(f"database ============  update_endpoints")
         if not self.charm.unit.is_leader():
             return
 
@@ -201,7 +201,7 @@ class PostgreSQLProvider(Object):
 
     def _update_unit_status(self, relation: Relation) -> None:
         """# Clean up Blocked status if it's due to extensions request."""
-        logger.info(f"============  _update_unit_status")
+        logger.info(f"database ============  _update_unit_status")
         if (
             self.charm.is_blocked
             and self.charm.unit.status.message == INVALID_EXTRA_USER_ROLE_BLOCKING_MESSAGE
@@ -215,7 +215,7 @@ class PostgreSQLProvider(Object):
         Args:
             relation_id: current relation to be skipped.
         """
-        logger.info(f"============  check_for_invalid_extra_user_roles")
+        logger.info(f"database ============  check_for_invalid_extra_user_roles")
         valid_privileges, valid_roles = self.charm.postgresql.list_valid_privileges_and_roles()
         for relation in self.charm.model.relations.get(self.relation_name, []):
             if relation.id == relation_id:
