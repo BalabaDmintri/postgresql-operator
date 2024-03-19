@@ -133,7 +133,7 @@ class PostgreSQLProvider(Object):
 
     def _on_relation_broken(self, event: RelationBrokenEvent) -> None:
         """Correctly update the status."""
-        logger.info(f"database ============  _on_relation_broken")
+        logger.info(f" provider_psql ++++++++++++++++  _on_relation_broken")
         self._update_unit_status(event.relation)
 
     def _on_relation_changed_event(self, event: RelationChangedEvent) -> None:
@@ -240,13 +240,17 @@ class PostgreSQLProvider(Object):
                 self.charm.unit.status = ActiveStatus()
 
         if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
+            for relation_name, relations_list in self.model.relations.items():
+                logger.info(f" provide_psql -------------------- relation_name = {relation_name}")
+                for relation in relations_list:
+                    logger.info(f" provide_psql --------------------relation.name = {relation.name}")
             relations = [
                 relation.name
                 for relation_name, relations_list in self.model.relations.items()
                 for relation in relations_list
                 if relation_name in ALL_CLIENT_RELATIONS
             ]
-            logger.info(f" provide_psql ============ {relations}")
+            logger.info(f" provide_psql --------------------- {relations}")
             if self.relation_name not in relations:
                 self.charm.unit.status = ActiveStatus()
 
