@@ -290,17 +290,20 @@ class DbProvides(Object):
             if not self._check_for_blocking_relations(relation.id):
                 self.charm.unit.status = ActiveStatus()
 
-        # if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
-        #     relations = [
-        #         relation.name
-        #         for relation_name, relations_list in self.model.relations.items()
-        #         for relation in relations_list
-        #         if relation_name in ALL_CLIENT_RELATIONS
-        #     ]
-        #     logger.info(f" db +============ {relations}")
-        #     if self.relation_name not in relations:
-        #         self.charm.unit.status = ActiveStatus()
-
+        if self.charm.is_blocked and self.charm.unit.status.message == ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE:
+            for relation_name, relations_list in self.charm.model.relations.items():
+                logger.info(f" db -------------------- relation_name = {relation_name}")
+                for relation in relations_list:
+                    logger.info(f" db --------------------relation.name = {relation.name}")
+            relations = [
+                relation.name
+                for relation_name, relations_list in self.model.relations.items()
+                for relation in relations_list
+                if relation_name in ALL_CLIENT_RELATIONS
+            ]
+            logger.info(f" db --------------------- {relations}")
+            if self.relation_name not in relations:
+                self.charm.unit.status = ActiveStatus()
     def update_endpoints(self, relation: Relation = None) -> None:
         """Set the read/write and read-only endpoints."""
         # Get the current relation or all the relations
