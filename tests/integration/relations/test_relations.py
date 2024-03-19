@@ -74,24 +74,23 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
         timeout=1500,
     )
 
-    logger.info(f"  ========  remove-relation")
     await ops_test.model.applications[APP_NAME].remove_relation(
              f"{APP_NAME}:{DATABASE_RELATION}", f"{APPLICATION_APP_NAME}:{FIRST_DATABASE_RELATION}"
     )
-    # sleep(60*5)
-    await ops_test.model.wait_for_idle(status="active", timeout=1000)
-    # host = get_unit_address(ops_test, f"{APP_NAME}/0")
+    await ops_test.model.wait_for_idle(status="active", timeout=1500)
+    host = get_unit_address(ops_test, f"{APP_NAME}/0")
     # password = await get_password(ops_test, f"{APP_NAME}/0")
     # # modern_interface_connect = (f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator' "
     # #                             f"host='{host}'"
     # #                             f" password='{password}' connect_timeout=10")
-    # modern_interface_connect = await build_connection_string(ops_test, APPLICATION_APP_NAME, FIRST_DATABASE_RELATION)
-    #
-    # for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
-    #     with attempt:
-    #         with psycopg2.connect(modern_interface_connect) as connection:
-    #             assert connection.status == psycopg2.extensions.STATUS_READY
-    #
+    modern_interface_connect = await build_connection_string(ops_test, APPLICATION_APP_NAME, FIRST_DATABASE_RELATION)
+
+    logger.info(f"  ====================  database_unit_name  ={modern_interface_connect}")
+    for attempt in Retrying(stop=stop_after_delay(60 * 3), wait=wait_fixed(10)):
+        with attempt:
+            with psycopg2.connect(modern_interface_connect) as connection:
+                assert connection.status == psycopg2.extensions.STATUS_READY
+
     # database_unit_name = ops_test.model.applications[APP_NAME].units[0].name
     # logger.info(f"  ====================  database_unit_name  ={database_unit_name}")
     # legacy_interface_connect = await get_legacy_db_connection_str(ops_test, MAILMAN3_CORE_APP_NAME, DB_RELATION,
