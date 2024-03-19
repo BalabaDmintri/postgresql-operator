@@ -69,9 +69,9 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
 
     app = ops_test.model.applications[APP_NAME]
     logger.info(f"  ========  app  {app.name}")
-    await ops_test.model.wait_for_idle(
+    await ops_test.model.block_until(
         lambda: "blocked" in {unit.workload_status for unit in app.units},
-        timeout=1000
+        timeout=1500,
     )
 
     logger.info(f"  ========  remove-relation")
