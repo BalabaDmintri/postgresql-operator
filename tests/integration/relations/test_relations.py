@@ -68,19 +68,17 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     await ops_test.model.relate(APP_NAME, f"{APPLICATION_APP_NAME}:{FIRST_DATABASE_RELATION}")
 
     app = ops_test.model.applications[APP_NAME]
+    logger.info(f"  ========  app  {app.name}")
     await ops_test.model.wait_for_idle(
         lambda: "blocked" in {unit.workload_status for unit in app.units},
         timeout=1000
     )
 
-    sleep(60)
+    logger.info(f"  ========  remove-relation")
     await ops_test.model.applications[APP_NAME].remove_relation(
              f"{APP_NAME}:{DATABASE_RELATION}", f"{APPLICATION_APP_NAME}:{FIRST_DATABASE_RELATION}"
     )
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=1000)
-
-
-    sleep(60 * 10)
 
     # host = get_unit_address(ops_test, f"{APP_NAME}/0")
     # password = await get_password(ops_test, f"{APP_NAME}/0")
