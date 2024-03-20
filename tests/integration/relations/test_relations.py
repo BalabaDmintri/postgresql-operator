@@ -79,7 +79,13 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
              f"{APP_NAME}:{DATABASE_RELATION}", f"{APPLICATION_APP_NAME}:{FIRST_DATABASE_RELATION}"
     )
     logger.info(f"  ====================  wait_for_idle")
-    await ops_test.model.wait_for_idle(status="active", timeout=3000, raise_on_error=False)
+
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(
+            status="active",
+            timeout=1500,
+            idle_period=120,
+        )
     # host = get_unit_address(ops_test, f"{APP_NAME}/0")
     # password = await get_password(ops_test, f"{APP_NAME}/0")
     # # modern_interface_connect = (f"dbname='{APPLICATION_NAME.replace('-', '_')}_first_database' user='operator' "
