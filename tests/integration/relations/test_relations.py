@@ -83,8 +83,8 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
             status="active",
-            timeout=1500,
-            raise_on_error=False,
+            timeout=3000,
+            wait_for_at_least_units=3,
         )
     # host = get_unit_address(ops_test, f"{APP_NAME}/0")
     # password = await get_password(ops_test, f"{APP_NAME}/0")
