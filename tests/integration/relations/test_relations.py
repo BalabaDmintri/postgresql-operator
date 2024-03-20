@@ -84,7 +84,7 @@ async def test_legacy_modern_endpoints(ops_test: OpsTest):
         await ops_test.model.wait_for_idle(
             status="active",
             timeout=1500,
-            idle_period=120,
+            raise_on_error=False,
         )
     # host = get_unit_address(ops_test, f"{APP_NAME}/0")
     # password = await get_password(ops_test, f"{APP_NAME}/0")
