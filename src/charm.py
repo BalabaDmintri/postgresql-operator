@@ -439,18 +439,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _on_pgdata_storage_attached(self, _) -> None:
         # Change the primary if it's the unit that is being removed.
-        try:
-            logger.info(f" ===================  _on_pgdata_storage_attached")
-            primary = self._patroni.get_primary(unit_name_pattern=True)
-        except RetryError:
-            # Ignore the event if the primary couldn't be retrieved.
-            # If a switchover is needed, an automatic failover will be triggered
-            # when the unit is removed.
-            logger.debug("Early exit on_pgdata_storage_detaching: primary cannot be retrieved")
-            return
-
-        if self.unit.name != primary:
-            return
+        logger.info(f" ===================  _on_pgdata_storage_attached")
+        if self.unit.is_leader():
+            logger.info(f" ===================  is_leader")
 
         if not self._patroni.are_all_members_ready():
             logger.warning(
