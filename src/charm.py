@@ -443,6 +443,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self.unit.is_leader():
             logger.info(f" ===================  is_leader")
 
+        if self.is_primary():
+            logger.info(f" ===================  is_primary")
+
         # if not self._patroni.are_all_members_ready():
         #     logger.warning(
         #         "could not switchover because not all members are ready"
