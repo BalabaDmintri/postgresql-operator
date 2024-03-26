@@ -443,12 +443,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self.unit.is_leader():
             logger.info(f" ===================  is_leader")
 
-        if not self._patroni.are_all_members_ready():
-            logger.warning(
-                "could not switchover because not all members are ready"
-                " - an automatic failover will be triggered"
-            )
-            return
+        # if not self._patroni.are_all_members_ready():
+        #     logger.warning(
+        #         "could not switchover because not all members are ready"
+        #         " - an automatic failover will be triggered"
+        #     )
+        #     return
 
     def _on_peer_relation_changed(self, event: HookEvent):
         """Reconfigure cluster members when something changes."""
