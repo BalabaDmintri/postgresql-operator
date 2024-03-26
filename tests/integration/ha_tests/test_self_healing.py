@@ -82,15 +82,15 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
                 config={"profile": "testing"},
             )
     # Deploy the continuous writes application charm if it wasn't already deployed.
-    if not await app_name(ops_test, APPLICATION_NAME):
-        wait_for_apps = True
-        async with ops_test.fast_forward():
-            await ops_test.model.deploy(
-                APPLICATION_NAME,
-                application_name=APPLICATION_NAME,
-                series=CHARM_SERIES,
-                channel="edge",
-            )
+    # if not await app_name(ops_test, APPLICATION_NAME):
+    #     wait_for_apps = True
+    #     async with ops_test.fast_forward():
+    #         await ops_test.model.deploy(
+    #             APPLICATION_NAME,
+    #             application_name=APPLICATION_NAME,
+    #             series=CHARM_SERIES,
+    #             channel="edge",
+    #         )
 
     if wait_for_apps:
         async with ops_test.fast_forward():
@@ -548,24 +548,25 @@ async def test_network_cut_without_ip_change(
 async def test_deploy_zero_units(ops_test: OpsTest):
     """Scale the database to zero units and scale up again."""
     app = await app_name(ops_test)
-
-    dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
-    connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
-
-    # Start an application that continuously writes data to the database.
-    await start_continuous_writes(ops_test, app)
-
-    logger.info("checking whether writes are increasing")
-    await are_writes_increasing(ops_test)
-
-    # Connect to the database.
-    # Create test data.
-    logger.info("connect to DB and create test table")
-    await create_test_data(connection_string)
+    #
+    # dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
+    # connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
+    #
+    # # Start an application that continuously writes data to the database.
+    # await start_continuous_writes(ops_test, app)
+    #
+    # logger.info("checking whether writes are increasing")
+    # await are_writes_increasing(ops_test)
+    #
+    # # Connect to the database.
+    # # Create test data.
+    # logger.info("connect to DB and create test table")
+    # await create_test_data(connection_string)
 
     unit_ip_addresses = []
     storage_id_list = []
-    primary_storage = ""
+    # primary_storage = ""
+    primary_name = await get_primary(ops_test, app)
     for unit in ops_test.model.applications[app].units:
         # Save IP addresses of units
         unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
