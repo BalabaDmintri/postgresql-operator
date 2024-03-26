@@ -445,7 +445,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         if self.primary_endpoint:
             logger.info(f" ===================  primary_endpoint")
-
+            if self._patroni.are_all_members_ready():
+                logger.info(
+                    "-------------   could not switchover because not all members are ready"
+                    " - an automatic failover will be triggered"
+                )
+                return
 
         # if not self._patroni.are_all_members_ready():
         #     logger.warning(
