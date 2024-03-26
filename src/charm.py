@@ -145,6 +145,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.secret_remove, self._on_peer_relation_changed)
         self.framework.observe(self.on[PEER].relation_departed, self._on_peer_relation_departed)
         self.framework.observe(self.on.pgdata_storage_detaching, self._on_pgdata_storage_detaching)
+        self.framework.observe(self.on.pgdata_storage_attached, self._on_pgdata_storage_attached)
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.get_password_action, self._on_get_password)
         self.framework.observe(self.on.set_password_action, self._on_set_password)
@@ -391,6 +392,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _on_pgdata_storage_detaching(self, _) -> None:
         # Change the primary if it's the unit that is being removed.
+        logger.info(f" ===================  _on_pgdata_storage_detaching")
         try:
             primary = self._patroni.get_primary(unit_name_pattern=True)
         except RetryError:
@@ -434,6 +436,28 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # a failed switchover, so wait until the primary is elected.
         if self.primary_endpoint:
             self._update_relation_endpoints()
+
+    def _on_pgdata_storage_attached(self, _) -> None:
+        # Change the primary if it's the unit that is being removed.
+        try:
+            logger.info(f" ===================  _on_pgdata_storage_attached")
+            primary = self._patroni.get_primary(unit_name_pattern=True)
+        except RetryError:
+            # Ignore the event if the primary couldn't be retrieved.
+            # If a switchover is needed, an automatic failover will be triggered
+            # when the unit is removed.
+            logger.debug("Early exit on_pgdata_storage_detaching: primary cannot be retrieved")
+            return
+
+        if self.unit.name != primary:
+            return
+
+        if not self._patroni.are_all_members_ready():
+            logger.warning(
+                "could not switchover because not all members are ready"
+                " - an automatic failover will be triggered"
+            )
+            return
 
     def _on_peer_relation_changed(self, event: HookEvent):
         """Reconfigure cluster members when something changes."""

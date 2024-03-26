@@ -298,6 +298,7 @@ class Patroni:
         # Check if all members are running and one of them is a leader (primary),
         # because sometimes there may exist (for some period of time) only
         # replicas after a failed switchover.
+        logger.info(f" ===================  {cluster_status.json()}")
         return all(
             member["state"] in RUNNING_STATES for member in cluster_status.json()["members"]
         ) and any(member["role"] == "leader" for member in cluster_status.json()["members"])
