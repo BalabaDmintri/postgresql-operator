@@ -707,8 +707,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     @property
     def members_ips(self) -> Set[str]:
         """Returns the list of IPs addresses of the current members of the cluster."""
-        v =  self._peers.data[self.app].get("members_ips", "[]")
-        logger.info(f" -============================= {v}")
+        logger.info(f" -============================= self.app{self.app}")
+        logger.info(f" -=============================self._peers.data[self.app] {self._peers.data[self.app]}")
+        v = self._peers.data[self.app].get("members_ips", "[]")
         logger.info(f" -============================= loads {json.loads(v)}")
         return set(json.loads(self._peers.data[self.app].get("members_ips", "[]")))
 
