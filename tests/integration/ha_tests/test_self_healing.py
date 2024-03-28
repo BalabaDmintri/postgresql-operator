@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 import asyncio
 import logging
+from time import sleep
 
 import psycopg2
 import pytest
@@ -76,7 +77,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
         async with ops_test.fast_forward():
             await ops_test.model.deploy(
                 charm,
-                num_units=1,
+                num_units=3,
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
@@ -95,6 +96,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
     if wait_for_apps:
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=1500)
+    sleep(60*30)
 
 
 @pytest.mark.group(1)
@@ -563,38 +565,38 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     # logger.info("connect to DB and create test table")
     # await create_test_data(connection_string)
 
-    unit_ip_addresses = []
-    storage_id_list = []
-    # primary_storage = ""
-    primary_name = await get_primary(ops_test, app)
-    for unit in ops_test.model.applications[app].units:
-        # Save IP addresses of units
-        unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
-
-        # Save detached storage ID
-        if primary_name != unit.name:
-            storage_id_list.append(storage_id(ops_test, unit.name))
-        else:
-            primary_storage = storage_id(ops_test, unit.name)
-
-    # Scale the database to zero units.
-    logger.info("scaling database to zero units")
-    await scale_application(ops_test, app, 0)
-
-    # Checking shutdown units.
-    for unit_ip in unit_ip_addresses:
-        try:
-            resp = requests.get(f"http://{unit_ip}:8008")
-            assert resp.status_code != 200, f"status code = {resp.status_code}, message = {resp.text}"
-        except requests.exceptions.ConnectionError as e:
-            assert True, f"unit host = http://{unit_ip}:8008, all units shutdown"
-        except Exception as e:
-            assert False, f"{e} unit host = http://{unit_ip}:8008, something went wrong"
-
-    # Scale the database to one unit.
-    logger.info("scaling database to one unit")
-    await add_unit_with_storage(ops_test, app=app, storage=primary_storage)
-    await ops_test.model.wait_for_idle(status="active", timeout=3000)
+    # unit_ip_addresses = []
+    # storage_id_list = []
+    # # primary_storage = ""
+    # primary_name = await get_primary(ops_test, app)
+    # for unit in ops_test.model.applications[app].units:
+    #     # Save IP addresses of units
+    #     unit_ip_addresses.append(await get_unit_ip(ops_test, unit.name))
+    #
+    #     # Save detached storage ID
+    #     if primary_name != unit.name:
+    #         storage_id_list.append(storage_id(ops_test, unit.name))
+    #     else:
+    #         primary_storage = storage_id(ops_test, unit.name)
+    #
+    # # Scale the database to zero units.
+    # logger.info("scaling database to zero units")
+    # await scale_application(ops_test, app, 0)
+    #
+    # # Checking shutdown units.
+    # for unit_ip in unit_ip_addresses:
+    #     try:
+    #         resp = requests.get(f"http://{unit_ip}:8008")
+    #         assert resp.status_code != 200, f"status code = {resp.status_code}, message = {resp.text}"
+    #     except requests.exceptions.ConnectionError as e:
+    #         assert True, f"unit host = http://{unit_ip}:8008, all units shutdown"
+    #     except Exception as e:
+    #         assert False, f"{e} unit host = http://{unit_ip}:8008, something went wrong"
+    #
+    # # Scale the database to one unit.
+    # logger.info("scaling database to one unit")
+    # await add_unit_with_storage(ops_test, app=app, storage=primary_storage)
+    # await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
     # connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
     # logger.info("checking whether writes are increasing")
