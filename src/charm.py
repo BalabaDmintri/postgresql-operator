@@ -79,7 +79,7 @@ from constants import (
     TLS_KEY_FILE,
     UNIT_SCOPE,
     USER,
-    USER_PASSWORD_KEY,
+    USER_PASSWORD_KEY, PATRONI_LOGS_PATH,
 )
 from relations.db import EXTENSIONS_BLOCKING_MESSAGE, DbProvides
 from relations.postgresql_provider import PostgreSQLProvider
@@ -806,6 +806,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             subprocess.check_call("mkdir -p /home/snap_daemon".split())
             subprocess.check_call("chown snap_daemon:snap_daemon /home/snap_daemon".split())
             subprocess.check_call("usermod -d /home/snap_daemon snap_daemon".split())
+            cmd = ["ls", PATRONI_LOGS_PATH]
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+            stdout, stderr = proc.communicate()
+            exitcode = proc.returncode
+            stdout.decode("utf-8").split('\n')[:-1]
+            logger.info(f"   ----------------------  stdout  = {stdout}")
         except subprocess.CalledProcessError:
             logger.exception("Unable to create snap_daemon home dir")
 
