@@ -1019,6 +1019,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def _start_primary(self, event: StartEvent) -> None:
         """Bootstrap the cluster."""
         # Set some information needed by Patroni to bootstrap the cluster.
+        logger.info(f"   ------------------------------  self._patroni.unit_ip =  {self._patroni.unit_ip}")
         if not self._patroni.bootstrap_cluster():
             self.unit.status = BlockedStatus("failed to start Patroni")
             return

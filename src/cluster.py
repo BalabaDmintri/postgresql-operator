@@ -106,7 +106,7 @@ class Patroni:
 
     @property
     def _patroni_url(self) -> str:
-        logger.info(f" ---------------------------  _patroni_url = {unit_ip}")
+        logger.info(f" ---------------------------  _patroni_url = {self.unit_ip}")
         """Patroni REST API URL."""
         return f"{'https' if self.tls_enabled else 'http'}://{self.unit_ip}:8008"
 
