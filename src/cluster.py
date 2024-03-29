@@ -660,16 +660,16 @@ class Patroni:
         """
         last_log_file = self._last_patroni_log_file()
         logger.info(f" ----------------------------- system_id_mismatch  {unit_name}  ===  {last_log_file}")
-        # if ("CRITICAL: system ID mismatch" in last_log_file):
-        #     logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
-        # if (
-        #         f" CRITICAL: system ID mismatch, node {unit_name} belongs to a different cluster:"
-        #         in last_log_file
-        # ):
-        #     logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
-        #     return True
+        if "CRITICAL: system ID mismatch" in last_log_file:
+            logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
+        if (
+                f" CRITICAL: system ID mismatch, node {unit_name} belongs to a different cluster:"
+                in last_log_file
+        ):
+            logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
+            return True
 
-        return True
+        return False
 
     def _last_patroni_log_file(self) -> str:
         """Get last log file content of Patroni service.

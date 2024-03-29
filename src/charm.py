@@ -479,7 +479,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if not self._patroni.member_started:
             logger.debug("Deferring on_peer_relation_changed: awaiting for member to start")
             self.unit.status = WaitingStatus("awaiting for member to start")
-            self._check_storage_belongs_to_defferent_cluster()
             event.defer()
             return
 
@@ -513,6 +512,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             if not self.is_blocked or self.unit.status.message == NO_PRIMARY_MESSAGE:
                 logger.info(f" ------------- 10 [{self.unit.name}]  _update_new_unit_status ")
                 self.unit.status = ActiveStatus()
+            if self.self._check_storage_belongs_to_defferent_cluster():
+                self.unit.status = BlockedStatus("AAAAAAAAAAAAAAAAAAAAA")
         else:
             self.unit.status = BlockedStatus(NO_PRIMARY_MESSAGE)
 
@@ -1514,8 +1515,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def _check_storage_belongs_to_defferent_cluster(self) -> bool:
         if self._patroni.system_id_mismatch(unit_name=self.unit.name):
             logger.info(f" --------------------------------  _check_storage_belongs_to_defferent_cluster = {self.unit.name}")
-            return False
-        return True
+            return True
+        return False
 
 
 if __name__ == "__main__":
