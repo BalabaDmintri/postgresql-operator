@@ -554,7 +554,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         await asyncio.gather(
             ops_test.model.deploy(
                 charm,
-                num_units=2,
+                num_units=1,
                 application_name="psql-first",
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
@@ -578,9 +578,6 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         unit_storage_id = storage_id(ops_test, unit.name)
 
     await scale_application(ops_test, application_name="psql-second", count=0)
-    for unit in ops_test.model.applications["psql-first"].units:
-        if not await unit.is_leader_from_status():
-            await ops_test.model.destroy_unit(unit.name)
 
     await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
     logger.info(f" -----------------------  add unit to psql-first {unit_storage_id}")
