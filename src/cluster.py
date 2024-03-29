@@ -671,7 +671,7 @@ class Patroni:
 
         return True
 
-    def _last_patroni_log_file(self):
+    def _last_patroni_log_file(self) -> str:
         """Get last log file content of Patroni service.
 
         If there is no available log files, empty line will be returned.
