@@ -480,6 +480,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             logger.debug("Deferring on_peer_relation_changed: awaiting for member to start")
             logger.info(f" ------------- 7 [{self.unit.name}]  _on_peer_relation_changed ")
             self.unit.status = WaitingStatus("awaiting for member to start")
+            self._check_storage_belongs_to_defferent_cluster()
             event.defer()
             return
 
