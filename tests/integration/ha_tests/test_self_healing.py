@@ -588,13 +588,13 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
     logger.info(f" -----------------------  add unit to psql-first {unit_storage_id}")
     added_unit = await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id)
-    sleep(60*3)
-    await ops_test.model.wait_for_idle(
-        apps=["psql-first"],
-        status="blocked",
-        raise_on_blocked=False,
+
+    app = ops_test.model.applications["psql-first"]
+    await ops_test.model.block_until(
+        lambda: "blocked" in {u.workload_status for u in app.units},
         timeout=1500,
     )
+
     logger.info(f" ----------------------- destroy_unit {added_unit.name}")
     await ops_test.model.destroy_unit(added_unit.name)
     await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
@@ -602,8 +602,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info(f" -----------------------  add storage first")
     await add_unit_with_storage(ops_test, app="psql-first", storage=first_storage)
     await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
-    logger.info(f" -----------------------  sleep")
-    sleep(60 * 5)
+    logger.info(f" -----------------------  stop")
 
     # app = await app_name(ops_test)
     #
