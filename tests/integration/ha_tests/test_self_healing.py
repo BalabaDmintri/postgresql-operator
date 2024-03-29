@@ -551,33 +551,40 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     """Scale the database to zero units and scale up again."""
     charm = await ops_test.build_charm(".")
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(
-            charm,
-            num_units=2,
-            application_name="psql-first",
-            series=CHARM_SERIES,
-            storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
-            config={"profile": "testing"},
-        )
-        await ops_test.model.deploy(
-            charm,
-            num_units=1,
-            application_name="psql-second",
-            series=CHARM_SERIES,
-            storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
-            config={"profile": "testing"},
+        await asyncio.gather(
+            ops_test.model.deploy(
+                charm,
+                num_units=2,
+                application_name="psql-first",
+                series=CHARM_SERIES,
+                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+                config={"profile": "testing"},
+            ),
+            ops_test.model.deploy(
+                charm,
+                num_units=1,
+                application_name="psql-second",
+                series=CHARM_SERIES,
+                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+                config={"profile": "testing"},
+            )
         )
 
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(status="active", timeout=1500)
+        await ops_test.model.wait_for_idle(apps=["psql-first", "psql-second",], status="active", timeout=1500)
 
     unit_storage_id = ""
     for unit in ops_test.model.applications["psql-second"].units:
             unit_storage_id= storage_id(ops_test, unit.name)
 
     await scale_application(ops_test, application_name="psql-second", count=0)
-    await scale_application(ops_test, application_name="psql-first", count=1)
+    for unit in ops_test.model.applications["psql-first"].units:
+        if not await unit.is_leader_from_status():
+            await ops_test.model.destroy_unit(unit.name)
+
+    await ops_test.model.wait_for_idle(apps=["psql-second","psql-first"], status="active", timeout=1500)
     await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id)
+    await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
     sleep(60*5)
 
