@@ -658,6 +658,7 @@ class Patroni:
         In restore action, this means that database service failed to reach point-in-time-recovery target or has been
         supplied with bad PITR parameter. Executes only on current unit.
         """
+        logger.info(f" ----------------------------- system_id_mismatch")
         last_log_file = self._last_patroni_log_file()
         if ("CRITICAL: system ID mismatch" in last_log_file):
             logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
@@ -678,6 +679,7 @@ class Patroni:
         Returns:
             Content of last log file of Patroni service.
         """
+        logger.info(f" ----------------------------- _last_patroni_log_file")
         log_files = glob.glob(f"{PATRONI_LOGS_PATH}/*.log")
         if len(log_files) == 0:
             return
