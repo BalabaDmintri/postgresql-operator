@@ -582,10 +582,12 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         if not await unit.is_leader_from_status():
             await ops_test.model.destroy_unit(unit.name)
 
-    await ops_test.model.wait_for_idle(apps=["psql-second","psql-first"], status="active", timeout=1500)
+    await ops_test.model.wait_for_idle(apps=["psql-second", "psql-first"], status="active", timeout=1500)
+    logger.info(f" -----------------------  add unit to psql-first {unit_storage_id}")
     await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id)
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
+    logger.info(f" -----------------------  sleep")
     sleep(60*5)
 
     # app = await app_name(ops_test)
