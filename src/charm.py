@@ -1168,6 +1168,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self._observer.start_observer()
 
     def _can_run_on_update_status(self) -> bool:
+        logger.info(f" -------_can_run_on_update_status------------  {self.unit.name}")
         if "cluster_initialised" not in self._peers.data[self.app]:
             return False
 
@@ -1178,7 +1179,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self.is_blocked:
             logger.debug("on_update_status early exit: Unit is in Blocked status")
             return False
-
+        logger.info(f"+++++++++_can_run_on_update_status++++++++++++   {self.unit.name}")
         return True
 
     def _handle_processes_failures(self) -> bool:
