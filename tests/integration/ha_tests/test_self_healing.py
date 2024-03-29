@@ -549,7 +549,39 @@ async def test_network_cut_without_ip_change(
 @pytest.mark.group(1)
 async def test_deploy_zero_units(ops_test: OpsTest):
     """Scale the database to zero units and scale up again."""
-    app = await app_name(ops_test)
+    charm = await ops_test.build_charm(".")
+    async with ops_test.fast_forward():
+        await ops_test.model.deploy(
+            charm,
+            num_units=2,
+            application_name="psql-first",
+            series=CHARM_SERIES,
+            storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+            config={"profile": "testing"},
+        )
+        await ops_test.model.deploy(
+            charm,
+            num_units=1,
+            application_name="psql-second",
+            series=CHARM_SERIES,
+            storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+            config={"profile": "testing"},
+        )
+
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(status="active", timeout=1500)
+
+    unit_storage_id = ""
+    for unit in ops_test.model.applications["psql-second"].units:
+            unit_storage_id= storage_id(ops_test, unit.name)
+
+    await scale_application(ops_test, application_name="psql-second", count=0)
+    await scale_application(ops_test, application_name="psql-first", count=1)
+    await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id)
+
+    sleep(60*5)
+
+    # app = await app_name(ops_test)
     #
     # dbname = f"{APPLICATION_NAME.replace('-', '_')}_first_database"
     # connection_string, primary_name = await get_db_connection(ops_test, dbname=dbname)
