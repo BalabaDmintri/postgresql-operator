@@ -438,20 +438,24 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def _on_peer_relation_changed(self, event: HookEvent):
         """Reconfigure cluster members when something changes."""
         # Prevents the cluster to be reconfigured before it's bootstrapped in the leader.
+        logger.info(f" ------------- 1 [{self.unit.name}]  _on_peer_relation_changed ")
         if "cluster_initialised" not in self._peers.data[self.app]:
             logger.debug("Deferring on_peer_relation_changed: cluster not initialized")
             event.defer()
             return
 
+        logger.info(f" ------------- 2 [{self.unit.name}]  _on_peer_relation_changed ")
         # If the unit is the leader, it can reconfigure the cluster.
         if self.unit.is_leader() and not self._reconfigure_cluster(event):
             event.defer()
             return
 
+        logger.info(f" ------------- 3 [{self.unit.name}]  _on_peer_relation_changed ")
         if self._update_member_ip():
             return
 
         # Don't update this member before it's part of the members list.
+        logger.info(f" ------------- 4 [{self.unit.name}]  _on_peer_relation_changed ")
         if self._unit_ip not in self.members_ips:
             logger.debug("Early exit on_peer_relation_changed: Unit not in the members list")
             return
@@ -459,6 +463,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Update the list of the cluster members in the replicas to make them know each other.
         try:
             # Update the members of the cluster in the Patroni configuration on this unit.
+            logger.info(f" ------------- 5 [{self.unit.name}]  _on_peer_relation_changed ")
             self.update_config()
         except RetryError:
             self.unit.status = BlockedStatus("failed to update cluster members on member")
@@ -467,11 +472,13 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Start can be called here multiple times as it's idempotent.
         # At this moment, it starts Patroni at the first time the data is received
         # in the relation.
+        logger.info(f" ------------- 6 [{self.unit.name}]  _on_peer_relation_changed ")
         self._patroni.start_patroni()
 
         # Assert the member is up and running before marking the unit as active.
         if not self._patroni.member_started:
             logger.debug("Deferring on_peer_relation_changed: awaiting for member to start")
+            logger.info(f" ------------- 7 [{self.unit.name}]  _on_peer_relation_changed ")
             self.unit.status = WaitingStatus("awaiting for member to start")
             event.defer()
             return
