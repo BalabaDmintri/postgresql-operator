@@ -366,6 +366,7 @@ class Patroni:
             allow server time to start up.
         """
         try:
+            logger.info(f" --------------------- member_started = {self._patroni_url}")
             response = self.get_patroni_health()
         except RetryError:
             return False
@@ -381,6 +382,7 @@ class Patroni:
             seconds times to allow server time to start up.
         """
         try:
+            logger.info(f" --------------------- member_inactive = {self._patroni_url}")
             response = self.get_patroni_health()
         except RetryError:
             return True
@@ -503,6 +505,7 @@ class Patroni:
             Whether the service started successfully.
         """
         try:
+            logger.info(f" --------------------- start_patroni = {self._patroni_url}")
             cache = snap.SnapCache()
             selected_snap = cache["charmed-postgresql"]
             selected_snap.start(services=["patroni"])
@@ -519,6 +522,7 @@ class Patroni:
             Whether the service stopped successfully.
         """
         try:
+            logger.info(f" --------------------- stop_patroni = {self._patroni_url}")
             cache = snap.SnapCache()
             selected_snap = cache["charmed-postgresql"]
             selected_snap.stop(services=["patroni"])
