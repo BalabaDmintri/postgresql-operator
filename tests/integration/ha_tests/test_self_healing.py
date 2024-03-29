@@ -96,7 +96,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
     if wait_for_apps:
         async with ops_test.fast_forward():
             await ops_test.model.wait_for_idle(status="active", timeout=1500)
-    sleep(60*30)
+    sleep(60 * 30)
 
 
 @pytest.mark.group(1)
@@ -571,11 +571,11 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         )
 
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=["psql-first", "psql-second",], status="active", timeout=1500)
+        await ops_test.model.wait_for_idle(apps=["psql-first", "psql-second", ], status="active", timeout=1500)
 
     unit_storage_id = ""
     for unit in ops_test.model.applications["psql-second"].units:
-            unit_storage_id= storage_id(ops_test, unit.name)
+        unit_storage_id = storage_id(ops_test, unit.name)
 
     await scale_application(ops_test, application_name="psql-second", count=0)
     for unit in ops_test.model.applications["psql-first"].units:
@@ -588,7 +588,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
     logger.info(f" -----------------------  sleep")
-    sleep(60*5)
+    sleep(60 * 5)
 
     # app = await app_name(ops_test)
     #
