@@ -468,6 +468,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             if self._patroni.system_id_mismatch(unit_name=self.unit.name):
                 logger.info(f" --------------------------------  system_id_mismatch = {self.unit.name}")
                 self.unit.status = BlockedStatus("----------AAAA----------")
+                return
         except RetryError:
             logger.info(f" ------------- 55 [{self.unit.name}]  _on_peer_relation_changed ")
             self.unit.status = BlockedStatus("failed to update cluster members on member")
