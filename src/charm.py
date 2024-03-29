@@ -465,7 +465,11 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             # Update the members of the cluster in the Patroni configuration on this unit.
             logger.info(f" ------------- 5 [{self.unit.name}]  _on_peer_relation_changed ")
             self.update_config()
+            if self._patroni.system_id_mismatch(unit_name=self.unit.name):
+                logger.info(f" --------------------------------  system_id_mismatch = {self.unit.name}")
+                self.unit.status = BlockedStatus("----------AAAA----------")
         except RetryError:
+            logger.info(f" ------------- 55 [{self.unit.name}]  _on_peer_relation_changed ")
             self.unit.status = BlockedStatus("failed to update cluster members on member")
             return
 
@@ -1165,10 +1169,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self._handle_processes_failures():
             return
 
-        logger.info(f" ---------------------------   _on_update_status._check_storage_belongs_to_defferent_cluster")
-        if self._check_storage_belongs_to_defferent_cluster():
-            logger.info(f" ---------------------------   _on_update_status")
-
         self.postgresql_client_relation.oversee_users()
         if self.primary_endpoint:
             self._update_relation_endpoints()
@@ -1182,7 +1182,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self._observer.start_observer()
 
     def _can_run_on_update_status(self) -> bool:
-        logger.info(f" -------_can_run_on_update_status------------  {self.unit.name}")
         if "cluster_initialised" not in self._peers.data[self.app]:
             return False
 
@@ -1193,7 +1192,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self.is_blocked:
             logger.debug("on_update_status early exit: Unit is in Blocked status")
             return False
-        logger.info(f"+++++++++_can_run_on_update_status++++++++++++   {self.unit.name}")
         return True
 
     def _handle_processes_failures(self) -> bool:
@@ -1511,13 +1509,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             for relation in self.model.relations.get(relation_name, []):
                 relations.append(relation)
         return relations
-
-    def _check_storage_belongs_to_defferent_cluster(self) -> bool:
-        if self._patroni.system_id_mismatch(unit_name=self.unit.name):
-            logger.info(f" --------------------------------  _check_storage_belongs_to_defferent_cluster = {self.unit.name}")
-            return True
-        return False
-
 
 if __name__ == "__main__":
     main(PostgresqlOperatorCharm)
