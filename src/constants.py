@@ -62,3 +62,5 @@ APP_SCOPE = "app"
 UNIT_SCOPE = "unit"
 
 SECRET_KEY_OVERRIDES = {"ca": "cauth"}
+
+ERROR = "The storage  belongs to another cluster. Specify the current cluster's storage"

@@ -467,6 +467,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             self.update_config()
             if self._patroni.system_id_mismatch(unit_name=self.unit.name):
                 logger.info(f" --------------------------------  system_id_mismatch = {self.unit.name}")
+                "CRITICAL: system ID mismatch, node psql-first-2 belongs to a different cluster:"
                 self.unit.status = BlockedStatus("Failed mismatch system id")
                 return
         except RetryError:
