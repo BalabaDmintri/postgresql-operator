@@ -478,7 +478,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Assert the member is up and running before marking the unit as active.
         if not self._patroni.member_started:
             logger.debug("Deferring on_peer_relation_changed: awaiting for member to start")
-            logger.info(f" ------------- 7 [{self.unit.name}]  _on_peer_relation_changed ")
             self.unit.status = WaitingStatus("awaiting for member to start")
             self._check_storage_belongs_to_defferent_cluster()
             event.defer()
@@ -504,9 +503,15 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Only update the connection endpoints if there is a primary.
         # A cluster can have all members as replicas for some time after
         # a failed switchover, so wait until the primary is elected.
+        logger.info(f" ------------- 7 [{self.unit.name}]  _update_new_unit_status ")
         if self.primary_endpoint:
+            logger.info(f" ------------- 8 [{self.unit.name}]  _update_new_unit_status ")
             self._update_relation_endpoints()
+            logger.info(f" ------------- 9 [{self.unit.name}]  _update_new_unit_status ")
+            logger.info(f" ------------- 9 [{self.unit.status.message}]  message ")
+            logger.info(f" ------------- 9 [{self.is_blocked}]  is_blocked ")
             if not self.is_blocked or self.unit.status.message == NO_PRIMARY_MESSAGE:
+                logger.info(f" ------------- 10 [{self.unit.name}]  _update_new_unit_status ")
                 self.unit.status = ActiveStatus()
         else:
             self.unit.status = BlockedStatus(NO_PRIMARY_MESSAGE)
