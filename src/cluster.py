@@ -660,14 +660,15 @@ class Patroni:
         """
         logger.info(f" ----------------------------- system_id_mismatch")
         last_log_file = self._last_patroni_log_file()
-        if ("CRITICAL: system ID mismatch" in last_log_file):
-            logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
-        if (
-                f" CRITICAL: system ID mismatch, node {unit_name} belongs to a different cluster:"
-                in last_log_file
-        ):
-            logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
-            return True
+        logger.info(f" ----------------------------- system_id_mismatch    ===  {last_log_file}")
+        # if ("CRITICAL: system ID mismatch" in last_log_file):
+        #     logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
+        # if (
+        #         f" CRITICAL: system ID mismatch, node {unit_name} belongs to a different cluster:"
+        #         in last_log_file
+        # ):
+        #     logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
+        #     return True
 
         return True
 
@@ -679,14 +680,15 @@ class Patroni:
         Returns:
             Content of last log file of Patroni service.
         """
-        logger.info(f" ----------------------------- _last_patroni_log_file")
         log_files = glob.glob(f"{PATRONI_LOGS_PATH}/*.log")
         if len(log_files) == 0:
-            return
-        log_files.sort(reverse=True)
+            return ""
+        latest_file = max(log_files, key=os.path.getmtime)
         try:
-            with open(log_files[0], "r") as last_log_file:
+            with open(latest_file) as last_log_file:
                 logger.info(f" ------------------------- last_log_file.read() {last_log_file.read()}")
+                return last_log_file.read()
         except OSError as e:
             error_message = "Failed to read last patroni log file"
             logger.exception(error_message, exc_info=e)
+            return ""
