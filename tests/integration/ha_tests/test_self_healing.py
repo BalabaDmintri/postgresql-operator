@@ -554,7 +554,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         await asyncio.gather(
             ops_test.model.deploy(
                 charm,
-                num_units=1,
+                num_units=2,
                 application_name="psql-first",
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
@@ -577,13 +577,30 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     for unit in ops_test.model.applications["psql-second"].units:
         unit_storage_id = storage_id(ops_test, unit.name)
 
+    first_storage = ""
+    for unit in ops_test.model.applications["psql-first"].units:
+        if not await unit.is_leader_from_status():
+            first_storage = storage_id(ops_test, unit.name)
+            await ops_test.model.destroy_unit(unit.name)
+
     await scale_application(ops_test, application_name="psql-second", count=0)
 
     await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
     logger.info(f" -----------------------  add unit to psql-first {unit_storage_id}")
-    await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id)
-    await ops_test.model.wait_for_idle(status="active", timeout=3000)
+    added_unit = await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id)
+    await ops_test.model.wait_for_idle(
+        apps=["psql-first"],
+        status="blocked",
+        raise_on_blocked=False,
+        timeout=1500,
+    )
+    logger.info(f" ----------------------- destroy_unit {added_unit.name}")
+    await ops_test.model.destroy_unit(added_unit.name)
+    await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
 
+    logger.info(f" -----------------------  add storage first")
+    await add_unit_with_storage(ops_test, app="psql-first", storage=first_storage)
+    await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
     logger.info(f" -----------------------  sleep")
     sleep(60 * 5)
 
