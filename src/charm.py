@@ -145,7 +145,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.secret_remove, self._on_peer_relation_changed)
         self.framework.observe(self.on[PEER].relation_departed, self._on_peer_relation_departed)
         self.framework.observe(self.on.pgdata_storage_detaching, self._on_pgdata_storage_detaching)
-        self.framework.observe(self.on.pgdata_storage_attached, self._on_pgdata_storage_attached)
         self.framework.observe(self.on.start, self._on_start)
         self.framework.observe(self.on.get_password_action, self._on_get_password)
         self.framework.observe(self.on.set_password_action, self._on_set_password)
@@ -435,28 +434,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # a failed switchover, so wait until the primary is elected.
         if self.primary_endpoint:
             self._update_relation_endpoints()
-
-    def _on_pgdata_storage_attached(self, _) -> None:
-        # Change the primary if it's the unit that is being removed.
-        logger.info(f" ===================  _on_pgdata_storage_attached")
-        if self.unit.is_leader():
-            logger.info(f" ===================  is_leader")
-
-        if self.primary_endpoint:
-            logger.info(f" ===================  primary_endpoint")
-            if self._patroni.are_all_members_ready():
-                logger.info(
-                    "-------------   could not switchover because not all members are ready"
-                    " - an automatic failover will be triggered"
-                )
-                return
-
-        # if not self._patroni.are_all_members_ready():
-        #     logger.warning(
-        #         "could not switchover because not all members are ready"
-        #         " - an automatic failover will be triggered"
-        #     )
-        #     return
 
     def _on_peer_relation_changed(self, event: HookEvent):
         """Reconfigure cluster members when something changes."""
@@ -1159,7 +1136,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
             if not self._patroni.member_started:
                 logger.debug("on_update_status early exit: Patroni has not started yet")
-                self._check_storage_belongs_to_defferent_cluster()
                 return
 
             # Remove the restoring backup flag and the restore stanza name.
@@ -1174,6 +1150,10 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         if self._handle_processes_failures():
             return
+
+        logger.info(f" ---------------------------   _on_update_status._check_storage_belongs_to_defferent_cluster")
+        if self._check_storage_belongs_to_defferent_cluster():
+            logger.info(f" ---------------------------   _on_update_status")
 
         self.postgresql_client_relation.oversee_users()
         if self.primary_endpoint:
@@ -1517,11 +1497,11 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
                 relations.append(relation)
         return relations
 
-    def _check_storage_belongs_to_defferent_cluster(self):
+    def _check_storage_belongs_to_defferent_cluster(self) -> bool:
         if self._patroni.system_id_mismatch(unit_name=self.unit.name):
             logger.info(f" --------------------------------  _check_storage_belongs_to_defferent_cluster = {self.unit.name}")
-            return
-        return
+            return False
+        return True
 
 
 if __name__ == "__main__":
