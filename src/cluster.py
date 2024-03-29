@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 
 """Helper class used to manage cluster lifecycle."""
+import glob
 import logging
 import os
 import pwd
@@ -106,7 +107,6 @@ class Patroni:
 
     @property
     def _patroni_url(self) -> str:
-        logger.info(f" ---------------------------  _patroni_url = {self.unit_ip}")
         """Patroni REST API URL."""
         return f"{'https' if self.tls_enabled else 'http'}://{self.unit_ip}:8008"
 
@@ -299,7 +299,6 @@ class Patroni:
         # Check if all members are running and one of them is a leader (primary),
         # because sometimes there may exist (for some period of time) only
         # replicas after a failed switchover.
-        logger.info(f" ===================  {cluster_status.json()}")
         return all(
             member["state"] in RUNNING_STATES for member in cluster_status.json()["members"]
         ) and any(member["role"] == "leader" for member in cluster_status.json()["members"])
@@ -366,7 +365,6 @@ class Patroni:
             allow server time to start up.
         """
         try:
-            logger.info(f" --------------------- member_started = {self._patroni_url}")
             response = self.get_patroni_health()
         except RetryError:
             return False
@@ -382,7 +380,6 @@ class Patroni:
             seconds times to allow server time to start up.
         """
         try:
-            logger.info(f" --------------------- member_inactive = {self._patroni_url}")
             response = self.get_patroni_health()
         except RetryError:
             return True
@@ -505,7 +502,6 @@ class Patroni:
             Whether the service started successfully.
         """
         try:
-            logger.info(f" --------------------- start_patroni = {self._patroni_url}")
             cache = snap.SnapCache()
             selected_snap = cache["charmed-postgresql"]
             selected_snap.start(services=["patroni"])
@@ -522,7 +518,6 @@ class Patroni:
             Whether the service stopped successfully.
         """
         try:
-            logger.info(f" --------------------- stop_patroni = {self._patroni_url}")
             cache = snap.SnapCache()
             selected_snap = cache["charmed-postgresql"]
             selected_snap.stop(services=["patroni"])
@@ -656,3 +651,40 @@ class Patroni:
                 # Check whether the update was unsuccessful.
                 if r.status_code != 200:
                     raise UpdateSyncNodeCountError(f"received {r.status_code}")
+
+    def system_id_mismatch(self, unit_name: str) -> bool:
+        """Check if Patroni service is down and there is fatal error during cluster bootstrap process in its logs.
+
+        In restore action, this means that database service failed to reach point-in-time-recovery target or has been
+        supplied with bad PITR parameter. Executes only on current unit.
+        """
+        last_log_file = self._last_patroni_log_file()
+        if ("CRITICAL: system ID mismatch" in last_log_file):
+            logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
+        if (
+                f" CRITICAL: system ID mismatch, node {unit_name} belongs to a different cluster:"
+                in last_log_file
+        ):
+            logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
+            return True
+
+        return True
+
+    def _last_patroni_log_file(self):
+        """Get last log file content of Patroni service.
+
+        If there is no available log files, empty line will be returned.
+
+        Returns:
+            Content of last log file of Patroni service.
+        """
+        log_files = glob.glob(f"{PATRONI_LOGS_PATH}/*.log")
+        if len(log_files) == 0:
+            return
+        log_files.sort(reverse=True)
+        try:
+            with open(log_files[0], "r") as last_log_file:
+                logger.info(f" ------------------------- last_log_file.read() {last_log_file.read()}")
+        except OSError as e:
+            error_message = "Failed to read last patroni log file"
+            logger.exception(error_message, exc_info=e)

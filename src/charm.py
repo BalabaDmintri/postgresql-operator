@@ -392,7 +392,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _on_pgdata_storage_detaching(self, _) -> None:
         # Change the primary if it's the unit that is being removed.
-        logger.info(f" ===================  _on_pgdata_storage_detaching")
         try:
             primary = self._patroni.get_primary(unit_name_pattern=True)
         except RetryError:
@@ -707,10 +706,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     @property
     def members_ips(self) -> Set[str]:
         """Returns the list of IPs addresses of the current members of the cluster."""
-        logger.info(f" -============================= self.app{self.app}")
-        logger.info(f" -=============================self._peers.data[self.app] {self._peers.data[self.app]}")
         v = self._peers.data[self.app].get("members_ips", "[]")
-        logger.info(f" -============================= loads {json.loads(v)}")
         return set(json.loads(self._peers.data[self.app].get("members_ips", "[]")))
 
     def _add_to_members_ips(self, ip: str) -> None:
@@ -806,12 +802,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             subprocess.check_call("mkdir -p /home/snap_daemon".split())
             subprocess.check_call("chown snap_daemon:snap_daemon /home/snap_daemon".split())
             subprocess.check_call("usermod -d /home/snap_daemon snap_daemon".split())
-            cmd = ["ls", PATRONI_LOGS_PATH]
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-            stdout, stderr = proc.communicate()
-            exitcode = proc.returncode
-            stdout.decode("utf-8").split('\n')[:-1]
-            logger.info(f"   ----------------------  stdout  = {stdout}")
         except subprocess.CalledProcessError:
             logger.exception("Unable to create snap_daemon home dir")
 
@@ -1025,7 +1015,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def _start_primary(self, event: StartEvent) -> None:
         """Bootstrap the cluster."""
         # Set some information needed by Patroni to bootstrap the cluster.
-        logger.info(f"   ------------------------------  self._patroni.unit_ip =  {self._patroni.unit_ip}")
         if not self._patroni.bootstrap_cluster():
             self.unit.status = BlockedStatus("failed to start Patroni")
             return
@@ -1170,6 +1159,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
             if not self._patroni.member_started:
                 logger.debug("on_update_status early exit: Patroni has not started yet")
+                self._check_storage_belongs_to_defferent_cluster()
                 return
 
             # Remove the restoring backup flag and the restore stanza name.
@@ -1526,6 +1516,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             for relation in self.model.relations.get(relation_name, []):
                 relations.append(relation)
         return relations
+
+    def _check_storage_belongs_to_defferent_cluster(self):
+        if self._patroni.system_id_mismatch(unit_name=self.unit.name):
+            logger.info(f" --------------------------------  _check_storage_belongs_to_defferent_cluster = {self.unit.name}")
+            return
+        return
 
 
 if __name__ == "__main__":
