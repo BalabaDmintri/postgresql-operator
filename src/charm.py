@@ -512,7 +512,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             if not self.is_blocked or self.unit.status.message == NO_PRIMARY_MESSAGE:
                 logger.info(f" ------------- 10 [{self.unit.name}]  _update_new_unit_status ")
                 self.unit.status = ActiveStatus()
-            if self.self._check_storage_belongs_to_defferent_cluster():
+            if self._check_storage_belongs_to_defferent_cluster():
                 self.unit.status = BlockedStatus("AAAAAAAAAAAAAAAAAAAAA")
         else:
             self.unit.status = BlockedStatus(NO_PRIMARY_MESSAGE)
