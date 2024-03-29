@@ -659,12 +659,10 @@ class Patroni:
         supplied with bad PITR parameter. Executes only on current unit.
         """
         last_log_file = self._last_patroni_log_file()
+        unit_name = unit_name.replace("/", "-")
         logger.info(f" ----------------------------- system_id_mismatch  {unit_name}  ===  {last_log_file}")
         v = "CRITICAL: system ID mismatch" in last_log_file
         logger.info(f" ----------------------------- system_id_mismatch  !=! {v}")
-        if "CRITICAL: system ID mismatch" in last_log_file:
-            logger.info(f" ----------------------------- is_pitr_failed {last_log_file}")
-        unit_name = unit_name.replace("/", "-")
         if (
 
                 f" CRITICAL: system ID mismatch, node {unit_name} belongs to a different cluster:"
@@ -689,7 +687,6 @@ class Patroni:
         latest_file = max(log_files, key=os.path.getmtime)
         try:
             with open(latest_file) as last_log_file:
-                logger.info(f" ------------------------- last_log_file.read() {last_log_file.read()}")
                 return last_log_file.read()
         except OSError as e:
             error_message = "Failed to read last patroni log file"
