@@ -742,7 +742,7 @@ def storage_id(ops_test, unit_name):
             return line.split()[1]
 
 
-async def add_unit_with_storage(ops_test, app, storage, status: str = "active"):
+async def add_unit_with_storage(ops_test, app, storage, is_blocked: bool= False):
     """Adds unit with storage.
 
     Note: this function exists as a temporary solution until this issue is resolved:
@@ -755,9 +755,16 @@ async def add_unit_with_storage(ops_test, app, storage, status: str = "active"):
     return_code, _, _ = await ops_test.juju(*add_unit_cmd)
     assert return_code == 0, "Failed to add unit with storage"
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=[app], status=status, timeout=1500)
+        if is_blocked:
+            await ops_test.model.wait_for_idle(apps=[app], status="active", timeout=1500)
+        else:
+            application = ops_test.model.applications[app]
+            await ops_test.model.block_until(
+                lambda: "blocked" in {unit.workload_status for unit in application.units},
+                timeout=1500,
+            )
     assert (
-        len(ops_test.model.applications[app].units) == expected_units
+            len(ops_test.model.applications[app].units) == expected_units
     ), "New unit not added to model"
 
     # verify storage attached
