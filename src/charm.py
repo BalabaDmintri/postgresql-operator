@@ -980,7 +980,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
         logger.info(f" ---------------------  version {self._patroni.get_postgresql_version()}  [unit  = {self.unit.name}]")
-        logger.info(f" ------------  container = {self.unit.containers}")
+        if self.app.status == self._patroni.get_postgresql_version():
+            logger.info(f" ------------  app st")
 
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
 
@@ -1307,6 +1308,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
                 already present.
         """
         for snap_name, snap_version in packages:
+            logger.info(f" ===========   snap name {snap_name}")
+            logger.info(f" ===========   snap version {snap_version}")
             try:
                 snap_cache = snap.SnapCache()
                 snap_package = snap_cache[snap_name]
@@ -1316,9 +1319,13 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
                         snap_package.ensure(
                             snap.SnapState.Latest, revision=snap_version["revision"]
                         )
+                        v = snap_version["revision"]
+                        logger.info(f" ===========   revision version {v}")
                         snap_package.hold()
                     else:
+                        c = snap_version["channel"]
                         snap_package.ensure(snap.SnapState.Latest, channel=snap_version["channel"])
+                        logger.info(f" ===========   snap channel {c}")
 
             except (snap.SnapError, snap.SnapNotFoundError) as e:
                 logger.error(
