@@ -589,13 +589,13 @@ async def test_deploy_zero_units(ops_test: OpsTest):
 
     async with ops_test.fast_forward():
         logger.info(f" -----------------------  add unit to psql-first {unit_storage_id}")
-        added_unit = await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id)
+        added_unit = await add_unit_with_storage(ops_test, app="psql-first", storage=unit_storage_id, status="blocked")
         app = ops_test.model.applications["psql-first"]
         logger.info(f" -----------------------  block_until")
-        await ops_test.model.block_until(
-            lambda: "blocked" in {unit.workload_status for unit in app.units},
-            timeout=1500,
-        )
+        # await ops_test.model.block_until(
+        #     lambda: "blocked" in {unit.workload_status for unit in app.units},
+        #     timeout=1500,
+        # )
 
     logger.info(f" ----------------------- destroy_unit {added_unit.name}")
     async with ops_test.fast_forward():
