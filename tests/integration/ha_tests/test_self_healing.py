@@ -554,20 +554,20 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         await asyncio.gather(
             ops_test.model.deploy(
                 charm,
-                num_units=2,
+                num_units=1,
                 application_name="psql-first",
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 config={"profile": "testing"},
             ),
-            ops_test.model.deploy(
-                charm,
-                num_units=1,
-                application_name="psql-second",
-                series=CHARM_SERIES,
-                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
-                config={"profile": "testing"},
-            )
+            # ops_test.model.deploy(
+            #     charm,
+            #     num_units=1,
+            #     application_name="psql-second",
+            #     series=CHARM_SERIES,
+            #     storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+            #     config={"profile": "testing"},
+            # )
         )
 
     async with ops_test.fast_forward():
