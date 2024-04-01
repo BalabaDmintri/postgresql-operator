@@ -980,9 +980,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
         logger.info(f" ---------------------  version {self._patroni.get_postgresql_version()}  [unit  = {self.unit.name}]")
-        for name, container in self.unit.containers.items():
-            logger.info(f" ------------  container = {container.name}")
-            logger.info(f" ------------  name = {name}")
+        logger.info(f" ------------  container = {self.unit.containers}")
+
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
 
         # Open port
