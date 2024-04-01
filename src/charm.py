@@ -217,6 +217,23 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         return relation.data[self.unit]
 
+    @property
+    def version(self) -> str:
+        """Reports the current workload (FastAPI app) version."""
+        try:
+            if self.unit.get_container("").get_services(self.pebble_service_name):
+                return self._request_version()
+        # Catching Exception is not ideal, but we don't care much for the error here, and just
+        # default to setting a blank version since there isn't much the admin can do!
+        except Exception as e:
+            logger.warning("unable to get version from API: %s", str(e), exc_info=True)
+        return ""
+
+    def _request_version(self) -> str:
+        """Helper for fetching the version from the running workload using the API."""
+        resp = requests.get(f"http://localhost:{self.config['server-port']}/version", timeout=10)
+        return resp.json()["version"]
+
     def _peer_data(self, scope: Scopes) -> Dict:
         """Return corresponding databag for app/unit."""
         relation = self.model.get_relation(PEER)
@@ -962,7 +979,10 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
-        logger.info(f" ---------------------  version {self._patroni.get_postgresql_version()}")
+        logger.info(f" ---------------------  version {self._patroni.get_postgresql_version()}  [unit  = {self.unit.name}]")
+        for name, container in self.unit.containers.items():
+            logger.info(f" ------------  container = {container.name}")
+            logger.info(f" ------------  name = {name}")
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
 
         # Open port
