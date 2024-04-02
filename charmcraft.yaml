@@ -24,7 +24,7 @@ parts:
       - rustc
       - cargo
       - pkg-config
+      - requests-unixsocket
     charm-strict-dependencies: true
     charm-binary-python-packages:
       - psycopg2-binary
-      - requests-unixsocket
