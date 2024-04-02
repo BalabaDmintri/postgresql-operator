@@ -231,8 +231,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _request_version(self) -> str:
         """Helper for fetching the version from the running workload using the API."""
-        resp = requests.get(f"http://localhost:{self.config['server-port']}/version", timeout=10)
-        return resp.json()["version"]
+        # resp = requests.get(f"http://localhost:{self.config['server-port']}/version", timeout=10)
+        # return resp.json()["version"]
+        return ""
 
     def _peer_data(self, scope: Scopes) -> Dict:
         """Return corresponding databag for app/unit."""
@@ -979,11 +980,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
-        logger.info(f" ---------------------  version {self._patroni.get_postgresql_version()}  [unit  = {self.unit.name}]")
-        if self.app.status == self._patroni.get_postgresql_version():
-            logger.info(f" ------------  app st")
-
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
+        logger.info(f" ---------------  self.config {self.config}")
+        logger.info(f" ---------------  self.config['server-port'] {self.config['server-port']}")
 
         # Open port
         try:
