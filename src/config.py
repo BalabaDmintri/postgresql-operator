@@ -109,7 +109,7 @@ class CharmConfig(BaseConfigModel):
         """Return plugin config names in a iterable."""
         return filter(lambda x: x.startswith("plugin_"), cls.keys())
 
-    @validator("server_port")
+    @validator("server_port", check_fields=False)
     @classmethod
     def server_port(cls, value: int) -> Optional[int]:
         """Check server_port config option is between 1 and 65535."""
