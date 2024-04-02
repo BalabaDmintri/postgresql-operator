@@ -520,7 +520,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Start can be called here multiple times as it's idempotent.
         # At this moment, it starts Patroni at the first time the data is received
         # in the relation.
-        logger.info(f" ------------- 6 [{self.unit.name}]  _on_peer_relation_changed ")
         self._patroni.start_patroni()
 
         # Assert the member is up and running before marking the unit as active.
@@ -550,15 +549,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Only update the connection endpoints if there is a primary.
         # A cluster can have all members as replicas for some time after
         # a failed switchover, so wait until the primary is elected.
-        logger.info(f" ------------- 7 [{self.unit.name}]  _update_new_unit_status ")
         if self.primary_endpoint:
-            logger.info(f" ------------- 8 [{self.unit.name}]  _update_new_unit_status ")
             self._update_relation_endpoints()
-            logger.info(f" ------------- 9 [{self.unit.name}]  _update_new_unit_status ")
-            logger.info(f" ------------- 9 [{self.unit.status.message}]  message ")
-            logger.info(f" ------------- 9 [{self.is_blocked}]  is_blocked ")
             if not self.is_blocked or self.unit.status.message == NO_PRIMARY_MESSAGE:
-                logger.info(f" ------------- 10 [{self.unit.name}]  _update_new_unit_status ")
                 self.unit.status = ActiveStatus()
         else:
             self.unit.status = BlockedStatus(NO_PRIMARY_MESSAGE)
@@ -894,8 +887,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # update config on every run
         self.update_config()
 
-        logger.info(f"--------------------   version w  =  {self._getWorkloadVersion()}")
-        self.unit.set_workload_version(self._patroni.get_postgresql_version())
         if not self.unit.is_leader():
             return
 
@@ -1220,6 +1211,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self._handle_workload_failures():
             return
 
+        logger.info(f"-------------  version w  =  {self._getWorkloadVersion()}")
+        self.unit.set_workload_version(self._patroni.get_postgresql_version())
         self._set_primary_status_message()
 
         # Restart topology observer if it is gone
