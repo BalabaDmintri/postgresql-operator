@@ -111,7 +111,7 @@ class CharmConfig(BaseConfigModel):
 
     @validator("server_port", check_fields=False)
     @classmethod
-    def server_port(cls, value: int) -> Optional[int]:
+    def server_port_values(cls, value: int) -> Optional[int]:
         """Check server_port config option is between 1 and 65535."""
         if value < 1 or value > 65535:
             raise ValueError(f"Value is not a valid server port number [:{value}].")
