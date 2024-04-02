@@ -233,6 +233,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def _request_version(self) -> str:
         """Helper for fetching the version from the running workload using the API."""
         resp = requests.get(f"http://localhost:{self.config['server-port']}/version")
+        logger.info(f" =======================  resp = {resp.json()}")
         return resp.json()["version"]
 
     def _peer_data(self, scope: Scopes) -> Dict:
