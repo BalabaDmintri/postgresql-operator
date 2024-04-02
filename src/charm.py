@@ -983,6 +983,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
         logger.info(f" ---------------  self.config {self.config}")
         logger.info(f" ---------------  self.config['server-port'] {self.config['server-port']}")
+        logger.info(f" ---------------  version {self._request_version()}")
 
 
         # Open port
