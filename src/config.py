@@ -113,8 +113,8 @@ class CharmConfig(BaseConfigModel):
     @classmethod
     def server_port(cls, value: int) -> Optional[int]:
         """Check server_port config option is between 1 and 65535."""
-        if 1 <= port <= 65535:
-            raise ValueError("Value is not a valid port number.")
+        if value < 1 or value > 65535:
+            raise ValueError(f"Value is not a valid server port number [:{value}].")
 
         return value
 
