@@ -11,6 +11,8 @@ import time
 import requests
 from typing import Dict, List, Literal, Optional, Set, get_args
 
+import requests_unixsocket
+
 from charms.data_platform_libs.v0.data_interfaces import DataPeer, DataPeerUnit
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
 from charms.grafana_agent.v0.cos_agent import COSAgentProvider
@@ -180,6 +182,28 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             ],
             log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
         )
+
+    def _getWorkloadVersion(self):
+        """Get the microsample workload version from the snapd API via unix-socket"""
+        snap_name = "microsample"
+        snapd_url = f"http+unix://%2Frun%2Fsnapd.socket/v2/snaps/{snap_name}"
+        session = requests_unixsocket.Session()
+        # Use the requests library to send a GET request over the Unix domain socket
+        response = session.get(snapd_url)
+        logger.info(f"  =========== =   snapd_url {snapd_url}")
+        # Check if the request was successful
+        logger.info(f"  =========== =   response.status_code {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"  =========== =   data {data}")
+            workload_version = data["result"]["version"]
+        else:
+            workload_version = "unknown"
+            logger.info(f"  =========== =    Status code: {response.status_code}")
+
+        # Return the workload version
+        return workload_version
+
 
     def patroni_scrape_config(self) -> List[Dict]:
         """Generates scrape config for the Patroni metrics endpoint."""
@@ -982,10 +1006,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
-        logger.info(f" ---------------  self.config {self.config}")
-        logger.info(f" ---------------  self.config['server_port'] {self.config['server_port']}")
-        logger.info(f" ---------------  version {self._request_version()}")
-
+        logger.info(f"--------------------   version w  =  {self._getWorkloadVersion()}")
 
         # Open port
         try:
