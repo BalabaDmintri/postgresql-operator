@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 options:
-  server-port:
+  server_port:
     description: Default port on which FastAPI is available
     type: int
     default: 8000
