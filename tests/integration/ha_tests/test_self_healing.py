@@ -554,7 +554,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         await asyncio.gather(
             ops_test.model.deploy(
                 charm,
-                num_units=1,
+                num_units=2,
                 application_name="psql-first",
                 series=CHARM_SERIES,
                 storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
