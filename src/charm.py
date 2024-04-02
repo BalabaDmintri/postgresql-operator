@@ -894,6 +894,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # update config on every run
         self.update_config()
 
+        logger.info(f"--------------------   version w  =  {self._getWorkloadVersion()}")
+        self.unit.set_workload_version(self._patroni.get_postgresql_version())
         if not self.unit.is_leader():
             return
 
@@ -1005,7 +1007,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
-        logger.info(f"--------------------   version w  =  {self._getWorkloadVersion()}")
 
         # Open port
         try:
