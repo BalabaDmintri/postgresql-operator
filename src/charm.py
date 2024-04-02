@@ -8,12 +8,11 @@ import logging
 import os
 import subprocess
 import time
-from requests.compat import urlparse
 
 import requests
 from typing import Dict, List, Literal, Optional, Set, get_args
 
-from requests_unixsocket import Session, UnixAdapter
+import requests_unixsocket
 
 from charms.data_platform_libs.v0.data_interfaces import DataPeer, DataPeerUnit
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
@@ -185,17 +184,17 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             log_slots=[f"{POSTGRESQL_SNAP_NAME}:logs"],
         )
 
-    def _custom_urlparse(url):
-        parsed_url = urlparse(url)
-        return UnixAdapter.Settings.ParseResult(
-            sockpath=parsed_url.path,
-            reqpath=parsed_url.fragment,
-        )
+    # def _custom_urlparse(url):
+    #     parsed_url = urlparse(url)
+    #     return UnixAdapter.Settings.ParseResult(
+    #         sockpath=parsed_url.path,
+    #         reqpath=parsed_url.fragment,
+    #     )
 
     def _getWorkloadVersion(self):
         """Get the microsample workload version from the snapd API via unix-socket"""
-        snapd_url = f"http+unix://%2Frun%2Fsnapd.socket/v2/snaps/{POSTGRESQL_SNAP_NAME}"
-        session = Session(settings=UnixAdapter.Settings(urlparse=self._custom_urlparse))
+        snapd_url = f"%2Frun%2Fsnapd.socket/v2/snaps/{POSTGRESQL_SNAP_NAME}"
+        session = requests_unixsocket.Session()
         # Use the requests library to send a GET request over the Unix domain socket
         response = session.get(snapd_url)
         logger.info(f"  =========== =   snapd_url {snapd_url}")
