@@ -194,7 +194,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _getWorkloadVersion(self):
         """Get the microsample workload version from the snapd API via unix-socket"""
-        snapd_url = f"http+unix://%2Frun%2Fsnapd.socket/v2/snaps/{POSTGRESQL_SNAP_NAME}"
+        snapd_url = f"http+unix:///run/snapd.socket/v2/snaps/{POSTGRESQL_SNAP_NAME}"
         session = Session(settings=UnixAdapter.Settings(urlparse=self._custom_urlparse))
         # Use the requests library to send a GET request over the Unix domain socket
         response = session.get(snapd_url)
