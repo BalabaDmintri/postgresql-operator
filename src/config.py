@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 class CharmConfig(BaseConfigModel):
     """Manager for the structured configuration."""
 
+    server_port: Optional[int]
     durability_synchronous_commit: Optional[str]
     instance_default_text_search_config: Optional[str]
     instance_password_encryption: Optional[str]
@@ -107,6 +108,15 @@ class CharmConfig(BaseConfigModel):
     def plugin_keys(cls) -> filter:
         """Return plugin config names in a iterable."""
         return filter(lambda x: x.startswith("plugin_"), cls.keys())
+
+    @validator("server_port")
+    @classmethod
+    def server_port(cls, value: int) -> Optional[int]:
+        """Check server_port config option is between 1 and 65535."""
+        if 1 <= port <= 65535:
+            raise ValueError("Value is not a valid port number.")
+
+        return value
 
     @validator("durability_synchronous_commit")
     @classmethod

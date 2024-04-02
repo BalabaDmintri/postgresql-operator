@@ -3,9 +3,9 @@
 
 options:
   server-port:
-    default: 8000
     description: Default port on which FastAPI is available
     type: int
+    default: 8000
   durability_synchronous_commit:
     description: |
       Sets the current transactions synchronization level. This charm allows only the

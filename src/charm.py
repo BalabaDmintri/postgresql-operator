@@ -8,6 +8,7 @@ import logging
 import os
 import subprocess
 import time
+import requests
 from typing import Dict, List, Literal, Optional, Set, get_args
 
 from charms.data_platform_libs.v0.data_interfaces import DataPeer, DataPeerUnit
@@ -79,7 +80,7 @@ from constants import (
     TLS_KEY_FILE,
     UNIT_SCOPE,
     USER,
-    USER_PASSWORD_KEY, PATRONI_LOGS_PATH,
+    USER_PASSWORD_KEY,
 )
 from relations.db import EXTENSIONS_BLOCKING_MESSAGE, DbProvides
 from relations.postgresql_provider import PostgreSQLProvider
@@ -231,9 +232,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _request_version(self) -> str:
         """Helper for fetching the version from the running workload using the API."""
-        # resp = requests.get(f"http://localhost:{self.config['server-port']}/version", timeout=10)
-        # return resp.json()["version"]
-        return ""
+        resp = requests.get(f"http://localhost:{self.config['server-port']}/version")
+        return resp.json()["version"]
 
     def _peer_data(self, scope: Scopes) -> Dict:
         """Return corresponding databag for app/unit."""
@@ -983,6 +983,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit.set_workload_version(self._patroni.get_postgresql_version())
         logger.info(f" ---------------  self.config {self.config}")
         logger.info(f" ---------------  self.config['server-port'] {self.config['server-port']}")
+
 
         # Open port
         try:
