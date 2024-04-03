@@ -200,17 +200,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Use the requests library to send a GET request over the Unix domain socket
 
         # Check if the request was successful
-        logger.info(f"  =========== =   response.status_code {response.status_code}")
         if response.status_code == 200:
             data = response.json()
-            logger.info(f"  =========== =   data {data}")
-            workload_version = data["result"]["version"]
-        else:
-            workload_version = "unknown"
-            logger.info(f"  =========== =    Status code: {response.status_code}")
+            return data["result"]["version"]
 
         # Return the workload version
-        return workload_version
+        return "unknown"
 
 
     def patroni_scrape_config(self) -> List[Dict]:
