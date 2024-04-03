@@ -1215,7 +1215,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self._handle_workload_failures():
             return
 
-        if self.app.planned_units() > 1:
+        if self.app.planned_units() > 1 and not self.unit.is_leader():
             logger.info(f"-------------  unit = {self.unit.name}")
             logger.info(f"-------------  patroni version = {self._patroni.get_postgresql_version()}")
             logger.info(f"-------------  version w  =  {self._getWorkloadVersion()}")
