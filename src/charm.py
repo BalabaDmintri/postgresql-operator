@@ -1220,8 +1220,11 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self._handle_workload_failures():
             return
 
+        logger.info(f"-------------  unit = {self.unit.name}")
+        logger.info(f"-------------  patroni version = {self._patroni.get_postgresql_version()}")
         logger.info(f"-------------  version w  =  {self._getWorkloadVersion()}")
-        self.unit.set_workload_version(self._patroni.get_postgresql_version())
+        if self._patroni.get_postgresql_version() == self._getWorkloadVersion():
+            self.unit.status = ActiveStatus(f"Version = {self._getWorkloadVersion()}")
         self._set_primary_status_message()
 
         # Restart topology observer if it is gone
