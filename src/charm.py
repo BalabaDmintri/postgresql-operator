@@ -9,6 +9,7 @@ import os
 import subprocess
 import time
 
+import httpx
 import requests
 from typing import Dict, List, Literal, Optional, Set, get_args
 
@@ -193,11 +194,11 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _getWorkloadVersion(self):
         """Get the microsample workload version from the snapd API via unix-socket"""
-        snapd_url = f"http+unix://%2Frun%2Fsnapd.socket/v2/snaps/{POSTGRESQL_SNAP_NAME}"
-        requests_unixsocket.monkeypatch()
+        transport = httpx.HTTPTransport(uds="/run/snapd.socket")
+        client = httpx.Client(transport=transport)
+        response = client.get(f"http://localhost/v2/snaps/{POSTGRESQL_SNAP_NAME}")
         # Use the requests library to send a GET request over the Unix domain socket
-        response = requests_unixsocket.get(snapd_url)
-        logger.info(f"  =========== =   snapd_url {snapd_url}")
+
         # Check if the request was successful
         logger.info(f"  =========== =   response.status_code {response.status_code}")
         if response.status_code == 200:
