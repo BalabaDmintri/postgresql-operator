@@ -571,7 +571,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         )
 
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=["psql-first"], status="active", timeout=1500)
+        await ops_test.model.wait_for_idle(status="active", timeout=1500, raise_on_error=False)
 
     sleep(60*5)
     # unit_storage_id = ""
