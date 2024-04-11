@@ -1003,8 +1003,10 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         if self.unit.is_leader():
             self.unit.set_workload_version("111")
+            logger.info(f" -----------------------   unit = {self.unit.name}")
         else:
             self.unit.set_workload_version(self._patroni.get_postgresql_version())
+            logger.info(f" -----------------------   unit = {self.unit.name}")
 
         # Open port
         try:
