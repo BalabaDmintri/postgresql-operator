@@ -552,7 +552,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     charm = await ops_test.build_charm(".")
     await ops_test.model.deploy(
         charm,
-        num_units=2,
+        num_units=1,
         application_name="psql-first",
         series=CHARM_SERIES,
         storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
@@ -560,8 +560,17 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     )
 
     await ops_test.model.wait_for_idle(status="active", timeout=1500)
+    sleep(60 * 2)
 
-    sleep(60*5)
+    new_unit = await ops_test.model.applications["psql-first"].add_unit(count=1)
+    await ops_test.model.block_until(
+        lambda: "blocked" in {unit.workload_status for unit in ops_test.model.applications["psql-first"].units},
+        timeout=1500,
+    )
+    sleep(60*2)
+
+    await ops_test.model.applications["psql-first"].destroy_unit(new_unit.name)
+    await ops_test.model.wait_for_idle(status="active", timeout=1500)
     # unit_storage_id = ""
     # for unit in ops_test.model.applications["psql-second"].units:
     #     unit_storage_id = storage_id(ops_test, unit.name)

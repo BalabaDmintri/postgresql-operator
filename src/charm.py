@@ -465,24 +465,29 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def _on_peer_relation_changed(self, event: HookEvent):
         """Reconfigure cluster members when something changes."""
         # Prevents the cluster to be reconfigured before it's bootstrapped in the leader.
-        logger.info(f" ------------- 1 [{self.unit.name}]  _on_peer_relation_changed ")
         if "cluster_initialised" not in self._peers.data[self.app]:
             logger.debug("Deferring on_peer_relation_changed: cluster not initialized")
             event.defer()
             return
 
-        logger.info(f" ------------- 2 [{self.unit.name}]  _on_peer_relation_changed ")
         # If the unit is the leader, it can reconfigure the cluster.
         if self.unit.is_leader() and not self._reconfigure_cluster(event):
             event.defer()
             return
 
-        logger.info(f" ------------- 3 [{self.unit.name}]  _on_peer_relation_changed ")
+        if self.unit.is_leader():
+            if not self.set_workload_version("111"):
+                self.unit.status = BlockedStatus(f"Version db version = {self._patroni.get_postgresql_version()}")
+                return
+        else:
+            if not self.set_workload_version(self._patroni.get_postgresql_version()):
+                self.unit.status = BlockedStatus(f"Version db version = {self._patroni.get_postgresql_version()}")
+                return
+
         if self._update_member_ip():
             return
 
         # Don't update this member before it's part of the members list.
-        logger.info(f" ------------- 4 [{self.unit.name}]  _on_peer_relation_changed ")
         if self._unit_ip not in self.members_ips:
             logger.debug("Early exit on_peer_relation_changed: Unit not in the members list")
             return
@@ -490,15 +495,11 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Update the list of the cluster members in the replicas to make them know each other.
         try:
             # Update the members of the cluster in the Patroni configuration on this unit.
-            logger.info(f" ------------- 5 [{self.unit.name}]  _on_peer_relation_changed ")
             self.update_config()
             if self._patroni.system_id_mismatch(unit_name=self.unit.name):
-                logger.info(f" --------------------------------  system_id_mismatch = {self.unit.name}")
-                "CRITICAL: system ID mismatch, node psql-first-2 belongs to a different cluster:"
                 self.unit.status = BlockedStatus("Failed mismatch system id")
                 return
         except RetryError:
-            logger.info(f" ------------- 55 [{self.unit.name}]  _on_peer_relation_changed ")
             self.unit.status = BlockedStatus("failed to update cluster members on member")
             return
 
@@ -981,16 +982,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             return
 
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
-
-        if self.unit.is_leader():
-            if not self.set_workload_version("111"):
-                self.unit.status = BlockedStatus("Version db ")
-                return
-        else:
-            if not self.set_workload_version(self._patroni.get_postgresql_version()):
-                self.unit.status = BlockedStatus("Version db ")
-                return
-
+        self.unit.set_workload_version(self._patroni.get_postgresql_version())
                 # Open port
         try:
             self.unit.open_port("tcp", 5432)
