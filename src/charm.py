@@ -475,14 +475,10 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
-        if self.unit.is_leader():
-            if not self.set_workload_version("111"):
-                self.unit.status = BlockedStatus(f"Version db 111 version = {self._patroni.get_postgresql_version()}")
-                return
-        else:
-            if not self.set_workload_version(self._patroni.get_postgresql_version()):
-                self.unit.status = BlockedStatus(f"Version db 14 version = {self._patroni.get_postgresql_version()}")
-                return
+        if not self.validate_database_version(self._patroni.get_postgresql_version()):
+            self.unit.status = BlockedStatus(
+                "Please select the correct version of postgresql to use.  No need to use different versions of postgresql")
+            return
 
         if self._update_member_ip():
             return
@@ -1541,24 +1537,17 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
                 relations.append(relation)
         return relations
 
-    def set_workload_version(self, version: str) -> bool:
+    def validate_database_version(self, version: str) -> bool:
         peer_db_version = self.app_peer_data.get("database-version")
-        unit_name = self.app_peer_data.get("unit_name")
 
-        logger.info(f"  ----------- set_workload_version 1= {peer_db_version}")
-        logger.info(f"  ----------- set_workload_version 2 leader= { self.unit.is_leader() }")
-        logger.info(f"  ----------- set_workload_version 3 peer db v= {peer_db_version is None}")
         if self.unit.is_leader() and peer_db_version is None:
-            logger.info(f"  ----------- set_workload_version 4")
             self.unit.set_workload_version(version)
             self.app_peer_data.update({"database-version": version, "unit_name":self.unit.name})
             return True
 
-        if unit_name != self.unit.name and peer_db_version != self._patroni.get_postgresql_version():
-            logger.info(f"  ----------- set_workload_version 5")
+        if peer_db_version != self._patroni.get_postgresql_version():
             return False
 
-        logger.info(f"  ----------- set_workload_version 6")
         return True
 
 
