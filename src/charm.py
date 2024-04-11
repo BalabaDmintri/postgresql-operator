@@ -985,13 +985,13 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         if self.unit.is_leader():
             if not self.set_workload_version("111"):
                 self.unit.status = BlockedStatus("Version db ")
-            logger.info(f" -----------------------   unit = {self.unit.name}")
+                return
         else:
             if not self.set_workload_version(self._patroni.get_postgresql_version()):
                 self.unit.status = BlockedStatus("Version db ")
-            logger.info(f" -----------------------   unit = {self.unit.name}")
+                return
 
-        # Open port
+                # Open port
         try:
             self.unit.open_port("tcp", 5432)
         except ModelError:
