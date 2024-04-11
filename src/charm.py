@@ -1551,7 +1551,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def set_workload_version(self, version: str) -> bool:
         peer_db_version = self.app_peer_data.get("database-version")
-        if peer_db_version is None:
+
+        if self.unit.is_leader() and peer_db_version is None:
             self.unit.set_workload_version(version)
             self.app_peer_data.update({"database-version": version})
             return True
