@@ -560,14 +560,12 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     )
 
     await ops_test.model.wait_for_idle(status="active", timeout=1500)
-    sleep(60 * 2)
 
     new_unit = await ops_test.model.applications["psql-first"].add_unit(count=1)
     await ops_test.model.block_until(
         lambda: "blocked" in {unit.workload_status for unit in ops_test.model.applications["psql-first"].units},
         timeout=1500,
     )
-    sleep(60*2)
 
     await ops_test.model.applications["psql-first"].destroy_unit(new_unit.name)
     await ops_test.model.wait_for_idle(status="active", timeout=1500)
