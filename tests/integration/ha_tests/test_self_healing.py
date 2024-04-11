@@ -567,9 +567,17 @@ async def test_deploy_zero_units(ops_test: OpsTest):
         timeout=1500,
     )
 
+    logger.info(f" ---------------- ")
+    unit_blocked = ""
     for unit in ops_test.model.applications["psql-first"].units:
+        logger.info(f" ---------------- leader  = {unit.is_leader_from_status}")
+        logger.info(f" ---------------- unit  = {unit.name}")
+        logger.info(f" ---------------- status  = {unit.workload_status}")
         if not unit.is_leader_from_status and unit.workload_status == "blocked":
-            await ops_test.model.applications["psql-first"].destroy_unit(unit.name)
+            unit_blocked = unit.name
+    logger.info(f" ---------------- destroy  = {unit_blocked}")
+    await ops_test.model.applications["psql-first"].destroy_unit(unit_blocked)
+    logger.info(f" ---------------- wait")
     await ops_test.model.wait_for_idle(status="active", timeout=1500)
     # unit_storage_id = ""
     # for unit in ops_test.model.applications["psql-second"].units:
