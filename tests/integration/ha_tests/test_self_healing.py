@@ -550,18 +550,16 @@ async def test_network_cut_without_ip_change(
 async def test_deploy_zero_units(ops_test: OpsTest):
     """Scale the database to zero units and scale up again."""
     charm = await ops_test.build_charm(".")
-    async with ops_test.fast_forward():
-        await ops_test.model.deploy(
-            charm,
-            num_units=2,
-            application_name="psql-first",
-            series=CHARM_SERIES,
-            storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
-            config={"profile": "testing"},
-        )
+    await ops_test.model.deploy(
+        charm,
+        num_units=2,
+        application_name="psql-first",
+        series=CHARM_SERIES,
+        storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+        config={"profile": "testing"},
+    )
 
-    async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(status="active", timeout=1500)
+    await ops_test.model.wait_for_idle(status="active", timeout=1500)
 
     sleep(60*5)
     # unit_storage_id = ""
