@@ -477,11 +477,11 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         if self.unit.is_leader():
             if not self.set_workload_version("111"):
-                self.unit.status = BlockedStatus(f"Version db version = {self._patroni.get_postgresql_version()}")
+                self.unit.status = BlockedStatus(f"Version db 111 version = {self._patroni.get_postgresql_version()}")
                 return
         else:
             if not self.set_workload_version(self._patroni.get_postgresql_version()):
-                self.unit.status = BlockedStatus(f"Version db version = {self._patroni.get_postgresql_version()}")
+                self.unit.status = BlockedStatus(f"Version db 14 version = {self._patroni.get_postgresql_version()}")
                 return
 
         if self._update_member_ip():
@@ -1544,14 +1544,20 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def set_workload_version(self, version: str) -> bool:
         peer_db_version = self.app_peer_data.get("database-version")
 
+        logger.info(f"  ----------- set_workload_version 1= {peer_db_version}")
+        logger.info(f"  ----------- set_workload_version 2 leader= { self.unit.is_leader() }")
+        logger.info(f"  ----------- set_workload_version 3 peer db v= {peer_db_version is None}")
         if self.unit.is_leader() and peer_db_version is None:
+            logger.info(f"  ----------- set_workload_version 4")
             self.unit.set_workload_version(version)
             self.app_peer_data.update({"database-version": version})
             return True
 
         if peer_db_version != self._patroni.get_postgresql_version():
+            logger.info(f"  ----------- set_workload_version 5")
             return False
 
+        logger.info(f"  ----------- set_workload_version 6")
         return True
 
 
