@@ -244,24 +244,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         return relation.data[self.unit]
 
-    @property
-    def version(self) -> str:
-        """Reports the current workload (FastAPI app) version."""
-        try:
-            if self.unit.get_container("").get_services(self.pebble_service_name):
-                return self._request_version()
-        # Catching Exception is not ideal, but we don't care much for the error here, and just
-        # default to setting a blank version since there isn't much the admin can do!
-        except Exception as e:
-            logger.warning("unable to get version from API: %s", str(e), exc_info=True)
-        return ""
-
-    def _request_version(self) -> str:
-        """Helper for fetching the version from the running workload using the API."""
-        resp = requests.get(f"http://localhost:{self.config['server_port']}/version")
-        logger.info(f" =======================  resp = {resp.json()}")
-        return resp.json()["version"]
-
     def _peer_data(self, scope: Scopes) -> Dict:
         """Return corresponding databag for app/unit."""
         relation = self.model.get_relation(PEER)
@@ -1001,10 +983,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
         if self.unit.is_leader():
-            self.unit.set_workload_version("111")
+            if not self.set_workload_version("111"):
+                self.unit.status = BlockedStatus("Version db ")
             logger.info(f" -----------------------   unit = {self.unit.name}")
         else:
-            self.unit.set_workload_version(self._patroni.get_postgresql_version())
+            if not self.set_workload_version(self._patroni.get_postgresql_version()):
+                self.unit.status = BlockedStatus("Version db ")
             logger.info(f" -----------------------   unit = {self.unit.name}")
 
         # Open port
@@ -1564,6 +1548,19 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             for relation in self.model.relations.get(relation_name, []):
                 relations.append(relation)
         return relations
+
+    def set_workload_version(self, version: str) -> bool:
+        peer_db_version = self.app_peer_data.get("database-version")
+        if peer_db_version is None:
+            self.unit.set_workload_version(version)
+            self.app_peer_data.update({"database-version": version})
+            return True
+
+        if peer_db_version != self._patroni.get_postgresql_version():
+            return False
+
+        return True
+
 
 if __name__ == "__main__":
     main(PostgresqlOperatorCharm)
