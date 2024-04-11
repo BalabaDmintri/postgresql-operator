@@ -13,7 +13,6 @@ import httpx
 import requests
 from typing import Dict, List, Literal, Optional, Set, get_args
 
-import requests_unixsocket
 
 from charms.data_platform_libs.v0.data_interfaces import DataPeer, DataPeerUnit
 from charms.data_platform_libs.v0.data_models import TypedCharmBase
