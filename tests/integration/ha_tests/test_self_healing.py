@@ -570,10 +570,10 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     logger.info(f" ---------------- ")
     unit_blocked = ""
     for unit in ops_test.model.applications["psql-first"].units:
-        logger.info(f" ---------------- leader  = {unit.is_leader_from_status}")
+        logger.info(f" ---------------- leader")
         logger.info(f" ---------------- unit  = {unit.name}")
         logger.info(f" ---------------- status  = {unit.workload_status}")
-        if not unit.is_leader_from_status and unit.workload_status == "blocked":
+        if not await unit.is_leader_from_status() and unit.workload_status == "blocked":
             unit_blocked = unit.name
     logger.info(f" ---------------- destroy  = {unit_blocked}")
     await ops_test.model.applications["psql-first"].destroy_unit(unit_blocked)
