@@ -71,32 +71,31 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
     wait_for_apps = False
     # It is possible for users to provide their own cluster for HA testing. Hence, check if there
     # is a pre-existing cluster.
-    if not await app_name(ops_test):
-        wait_for_apps = True
-        charm = await ops_test.build_charm(".")
-        async with ops_test.fast_forward():
-            await ops_test.model.deploy(
-                charm,
-                num_units=2,
-                series=CHARM_SERIES,
-                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
-                config={"profile": "testing"},
-            )
-    # Deploy the continuous writes application charm if it wasn't already deployed.
-    # if not await app_name(ops_test, APPLICATION_NAME):
-    #     wait_for_apps = True
-    #     async with ops_test.fast_forward():
-    #         await ops_test.model.deploy(
-    #             APPLICATION_NAME,
-    #             application_name=APPLICATION_NAME,
-    #             series=CHARM_SERIES,
-    #             channel="edge",
-    #         )
+    charm = await ops_test.build_charm(".")
+    await ops_test.model.deploy(
+        charm,
+        num_units=1,
+        application_name=APP_NAME,
+        series=CHARM_SERIES,
+        storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+        config={"profile": "testing"},
+    )
 
-    if wait_for_apps:
-        async with ops_test.fast_forward():
-            await ops_test.model.wait_for_idle(status="active", timeout=1500)
-    sleep(60 * 30)
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(status="active", timeout=1500)
+
+    await ops_test.model.remove_application(APP_NAME, block_until_done=True)
+
+    await ops_test.model.deploy(
+        charm,
+        num_units=1,
+        application_name=APP_NAME,
+        series=CHARM_SERIES,
+        storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
+        config={"profile": "testing"},
+    )
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(status="active", timeout=1500)
 
 
 @pytest.mark.group(1)
