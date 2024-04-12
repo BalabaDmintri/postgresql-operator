@@ -1540,7 +1540,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         peer_db_version = self.app_peer_data.get("database-version")
 
         if self.unit.is_leader() and peer_db_version is None:
-            self.unit.set_workload_version(self._patroni.get_postgresql_version())
+            self.unit.set_workload_version("111")
             self.app_peer_data.update({"database-version": self._patroni.get_postgresql_version(),
                                        "unit_name": self.unit.name})
             return
