@@ -475,10 +475,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             event.defer()
             return
 
-        if not self.validate_database_version(self._patroni.get_postgresql_version()):
-            self.unit.status = BlockedStatus(
-                "Please select the correct version of postgresql to use.  No need to use different versions of postgresql")
-            return
 
         if self._update_member_ip():
             return
@@ -525,6 +521,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             self._setup_exporter()
 
         self._update_new_unit_status()
+
+        self.validate_database_version()
 
     def _update_new_unit_status(self) -> None:
         """Update the status of a new unit that recently joined the cluster."""
@@ -1538,18 +1536,23 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
                 relations.append(relation)
         return relations
 
-    def validate_database_version(self, version: str) -> bool:
+    def validate_database_version(self):
         peer_db_version = self.app_peer_data.get("database-version")
 
         if self.unit.is_leader() and peer_db_version is None:
-            self.unit.set_workload_version(version)
-            self.app_peer_data.update({"database-version": version, "unit_name":self.unit.name})
-            return True
+            self.unit.set_workload_version(self._patroni.get_postgresql_version())
+            self.app_peer_data.update({"database-version": self._patroni.get_postgresql_version(),
+                                       "unit_name": self.unit.name})
+            return
 
         if peer_db_version != self._patroni.get_postgresql_version():
-            return False
+            self.unit.status = BlockedStatus(
+                "Please select the correct version of postgresql to use.  No need to use different versions of "
+                "postgresql"
+            )
 
-        return True
+        return
+
 
 
 if __name__ == "__main__":
