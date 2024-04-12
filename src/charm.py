@@ -716,8 +716,6 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     @property
     def members_ips(self) -> Set[str]:
         """Returns the list of IPs addresses of the current members of the cluster."""
-        logger.info(f" ------------- 11111-= {self._peers.data[self.app]}")
-        logger.info(f" ------------- 22222-= {self._peers.data[self.unit]}")
         return set(json.loads(self._peers.data[self.app].get("members_ips", "[]")))
 
     def _add_to_members_ips(self, ip: str) -> None:
@@ -1538,18 +1536,19 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def validate_database_version(self):
         peer_db_version = self.app_peer_data.get("database-version")
+        logger.info(f" ---------------------------  peer_db_version {self.unit.name}= {peer_db_version}")
 
         if self.unit.is_leader() and peer_db_version is None:
-            self.unit.set_workload_version("111")
             self.app_peer_data.update({"database-version": self._patroni.get_postgresql_version(),
                                        "unit_name": self.unit.name})
             return
 
-        if peer_db_version != self._patroni.get_postgresql_version():
-            self.unit.status = BlockedStatus(
-                "Please select the correct version of postgresql to use.  No need to use different versions of "
-                "postgresql"
-            )
+        if peer_db_version == self._patroni.get_postgresql_version():
+            if self.unit.name == "psql-first/1":
+                self.unit.status = BlockedStatus(
+                    "Please select the correct version of postgresql to use.  No need to use different versions of "
+                    "postgresql"
+                )
 
         return
 
