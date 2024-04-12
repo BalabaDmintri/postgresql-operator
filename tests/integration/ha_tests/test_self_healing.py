@@ -553,8 +553,10 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await ops_test.model.deploy(
         charm,
         num_units=1,
+        revision=363,
         application_name="psql-first",
         series=CHARM_SERIES,
+
         storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
         config={"profile": "testing"},
     )
