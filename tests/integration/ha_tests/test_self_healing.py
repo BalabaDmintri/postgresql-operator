@@ -570,6 +570,7 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     )
 
     logger.info(f" ---------------- ")
+    sleep(60*3)
     unit_blocked = ""
     for unit in ops_test.model.applications["psql-first"].units:
         logger.info(f" ---------------- leader")
