@@ -582,6 +582,9 @@ async def test_deploy_zero_units(ops_test: OpsTest):
     await ops_test.model.applications["psql-first"].destroy_unit(unit_blocked)
     logger.info(f" ---------------- wait")
     await ops_test.model.wait_for_idle(status="active", timeout=1500)
+    await ops_test.model.applications["psql-first"].add_unit(count=1)
+    await ops_test.model.wait_for_idle(status="active", timeout=1500)
+    sleep(60*5)
     # unit_storage_id = ""
     # for unit in ops_test.model.applications["psql-second"].units:
     #     unit_storage_id = storage_id(ops_test, unit.name)
