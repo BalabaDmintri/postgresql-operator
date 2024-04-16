@@ -86,7 +86,6 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
                 APPLICATION_NAME,
                 application_name=APPLICATION_NAME,
                 series=CHARM_SERIES,
-                storage={"pgdata": {"pool": "lxd-btrfs", "size": 2048}},
                 channel="edge",
             )
 
