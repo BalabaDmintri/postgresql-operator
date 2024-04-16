@@ -293,28 +293,28 @@ async def test_full_cluster_restart(
             ops_test, "loop_wait", initial_loop_wait, use_random_unit=True
         )
 
-    # # Verify all units are up and running.
-    # logger.info(f"--------------- 10")
-    # for unit in ops_test.model.applications[app].units:
-    #     assert await is_postgresql_ready(
-    #         ops_test, unit.name
-    #     ), f"unit {unit.name} not restarted after cluster restart."
-    #
-    # logger.info(f"--------------- 11")
-    # async with ops_test.fast_forward():
-    #     logger.info(f"--------------- 12")
-    #     await are_writes_increasing(ops_test)
-    #
-    # # Verify that all units are part of the same cluster.
-    # logger.info(f"--------------- 13")
-    # member_ips = await fetch_cluster_members(ops_test)
-    # logger.info(f"--------------- 14")
-    # ip_addresses = [unit.public_address for unit in ops_test.model.applications[app].units]
-    # assert set(member_ips) == set(ip_addresses), "not all units are part of the same cluster."
-    #
-    # # Verify that no writes to the database were missed after stopping the writes.
-    # async with ops_test.fast_forward():
-    #     await check_writes(ops_test)
+    # Verify all units are up and running.
+    logger.info(f"--------------- 10")
+    for unit in ops_test.model.applications[app].units:
+        assert await is_postgresql_ready(
+            ops_test, unit.name
+        ), f"unit {unit.name} not restarted after cluster restart."
+
+    logger.info(f"--------------- 11")
+    async with ops_test.fast_forward():
+        logger.info(f"--------------- 12")
+        await are_writes_increasing(ops_test)
+
+    # Verify that all units are part of the same cluster.
+    logger.info(f"--------------- 13")
+    member_ips = await fetch_cluster_members(ops_test)
+    logger.info(f"--------------- 14")
+    ip_addresses = [unit.public_address for unit in ops_test.model.applications[app].units]
+    assert set(member_ips) == set(ip_addresses), "not all units are part of the same cluster."
+
+    # Verify that no writes to the database were missed after stopping the writes.
+    async with ops_test.fast_forward():
+        await check_writes(ops_test)
 
 
 @pytest.mark.group(1)
