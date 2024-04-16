@@ -273,25 +273,25 @@ async def test_full_cluster_restart(
     # This test serves to verify behavior when all replicas are down at the same time that when
     # they come back online they operate as expected. This check verifies that we meet the criteria
     # of all replicas being down at the same time.
-    # try:
-    #     logger.info(f"---------------  5")
-    #     assert await are_all_db_processes_down(
-    #         ops_test, process
-    #     ), "Not all units down at the same time."
-    # finally:
-    #     logger.info(f"--------------- 6")
-    #     if process == PATRONI_PROCESS:
-    #         awaits = []
-    #         logger.info(f"--------------- 7")
-    #         for unit in ops_test.model.applications[app].units:
-    #             awaits.append(update_restart_condition(ops_test, unit, ORIGINAL_RESTART_CONDITION))
-    #         logger.info(f"--------------- 8")
-    #         await asyncio.gather(*awaits)
-    #     logger.info(f"--------------- 9")
-    #     await change_patroni_setting(
-    #         ops_test, "loop_wait", initial_loop_wait, use_random_unit=True
-    #     )
-    #
+    try:
+        logger.info(f"---------------  5")
+        assert await are_all_db_processes_down(
+            ops_test, process
+        ), "Not all units down at the same time."
+    finally:
+        logger.info(f"--------------- 6")
+        if process == PATRONI_PROCESS:
+            awaits = []
+            logger.info(f"--------------- 7")
+            for unit in ops_test.model.applications[app].units:
+                awaits.append(update_restart_condition(ops_test, unit, ORIGINAL_RESTART_CONDITION))
+            logger.info(f"--------------- 8")
+            await asyncio.gather(*awaits)
+        logger.info(f"--------------- 9")
+        await change_patroni_setting(
+            ops_test, "loop_wait", initial_loop_wait, use_random_unit=True
+        )
+
     # # Verify all units are up and running.
     # logger.info(f"--------------- 10")
     # for unit in ops_test.model.applications[app].units:
