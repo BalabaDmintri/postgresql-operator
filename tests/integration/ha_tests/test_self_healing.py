@@ -87,6 +87,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
                 application_name=APPLICATION_NAME,
                 series=CHARM_SERIES,
                 channel="edge",
+                revision=103,
             )
 
     if wait_for_apps:
