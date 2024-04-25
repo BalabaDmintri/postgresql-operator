@@ -1021,8 +1021,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
         _psql_version = self._patroni.get_postgresql_version()
+        logger.info(f"---------------------------------  {_psql_version}")
         self.unit.set_workload_version(_psql_version)
-        self.app_peer_data.update({"database-version": _psql_version})
+        logger.info(f"---------------------------------  is_leader {self.unit.is_leader()}")
+        if self.unit.is_leader():
+            logger.info(f"---------------------------------  database-version {_psql_version}")
+            self.app_peer_data.update({"database-version": _psql_version})
 
         # Open port
         try:
