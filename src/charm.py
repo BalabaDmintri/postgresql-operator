@@ -1605,6 +1605,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
     def _validate_database_version(self):
         """Checking that only one version of Postgres is used."""
         peer_db_version = self.app_peer_data.get("database-version")
+        logger.info(f"===================================  peer_db_version = {peer_db_version}")
+        logger.info(f"===================================  _patroni = {self._patroni.get_postgresql_version()}")
         if peer_db_version != self._patroni.get_postgresql_version():
             self.unit.status = BlockedStatus(DIFFERENT_VERSIONS_PSQL_BLOCKING_MESSAGE)
         return
