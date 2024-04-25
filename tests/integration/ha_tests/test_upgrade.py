@@ -36,21 +36,21 @@ async def test_deploy_latest(ops_test: OpsTest) -> None:
     """Simple test to ensure that the PostgreSQL and application charms get deployed."""
     await ops_test.model.deploy(
         DATABASE_APP_NAME,
-        num_units=2,
+        num_units=3,
         channel="14/edge",
         config={"profile": "testing"},
     )
-    # await ops_test.model.deploy(
-    #     APPLICATION_NAME,
-    #     num_units=1,
-    #     channel="latest/edge",
-    # )
+    await ops_test.model.deploy(
+        APPLICATION_NAME,
+        num_units=1,
+        channel="latest/edge",
+    )
     logger.info("Wait for applications to become active")
     async with ops_test.fast_forward():
         await ops_test.model.wait_for_idle(
-            apps=[DATABASE_APP_NAME], status="active", timeout=3000
+            apps=[DATABASE_APP_NAME, APPLICATION_NAME], status="active", timeout=3000
         )
-    assert len(ops_test.model.applications[DATABASE_APP_NAME].units) == 2
+    assert len(ops_test.model.applications[DATABASE_APP_NAME].units) == 3
 
 
 @pytest.mark.group(1)
@@ -114,40 +114,6 @@ async def test_upgrade_from_edge(ops_test: OpsTest, continuous_writes) -> None:
     assert (
         final_number_of_switchovers - initial_number_of_switchovers
     ) <= 2, "Number of switchovers is greater than 2"
-
-@pytest.mark.group(1)
-@pytest.mark.abort_on_fail
-async def test_psql_version(ops_test: OpsTest, continuous_writes) -> None:
-    # Start an application that continuously writes data to the database.
-    # logger.info("starting continuous writes to the database")
-    # await start_continuous_writes(ops_test, DATABASE_APP_NAME)
-
-    # Check whether writes are increasing.
-    # logger.info("checking whether writes are increasing")
-    # await are_writes_increasing(ops_test)
-
-    # primary_name = await get_primary(ops_test, f"{DATABASE_APP_NAME}/0")
-    # initial_number_of_switchovers = count_switchovers(ops_test, primary_name)
-
-    application = ops_test.model.applications[DATABASE_APP_NAME]
-
-    logger.info("Build charm locally")
-    charm = await ops_test.build_charm(".")
-
-    logger.info("Refresh the charm")
-    await application.refresh(path=charm)
-
-    logger.info("Wait for upgrade to start")
-    await ops_test.model.block_until(
-        lambda: "waiting" in {unit.workload_status for unit in application.units},
-        timeout=TIMEOUT,
-    )
-
-    logger.info("Wait for upgrade to complete")
-    async with ops_test.fast_forward("60s"):
-        await ops_test.model.wait_for_idle(
-            apps=[DATABASE_APP_NAME], status="active", idle_period=30, timeout=TIMEOUT
-        )
 
 
 @pytest.mark.group(1)
