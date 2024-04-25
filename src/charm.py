@@ -85,6 +85,7 @@ from constants import (
     UNIT_SCOPE,
     USER,
     USER_PASSWORD_KEY,
+    PEER_UPGRADE,
 )
 from relations.db import EXTENSIONS_BLOCKING_MESSAGE, DbProvides
 from relations.postgresql_provider import PostgreSQLProvider
@@ -165,6 +166,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.get_password_action, self._on_get_password)
         self.framework.observe(self.on.set_password_action, self._on_set_password)
         self.framework.observe(self.on.update_status, self._on_update_status)
+        self.framework.observe(self.on[PEER_UPGRADE].upgrade_finished, self._on_upgrade_finished)
         self.cluster_name = self.app.name
         self._member_name = self.unit.name.replace("/", "-")
         self._storage_path = self.meta.storages["pgdata"].location
@@ -534,6 +536,14 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self._update_new_unit_status()
 
         self._validate_database_version()
+
+    def _on_upgrade_finished(self, _) -> None:
+        """Handler for `upgrade-finished` events."""
+        self._set_workload_version()
+
+    def _set_database_version(self):
+        if self.unit.is_leader():
+            self.app_peer_data.update({"database-version": self._patroni.get_postgresql_version()})
 
     # Split off into separate function, because of complexity _on_peer_relation_changed
     def _start_stop_pgbackrest_service(self, event: HookEvent) -> None:
@@ -1020,13 +1030,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
-        _psql_version = self._patroni.get_postgresql_version()
-        logger.info(f"---------------------------------  {_psql_version}")
-        self.unit.set_workload_version(_psql_version)
-        logger.info(f"---------------------------------  is_leader {self.unit.is_leader()}")
-        if self.unit.is_leader():
-            logger.info(f"---------------------------------  database-version {_psql_version}")
-            self.app_peer_data.update({"database-version": _psql_version})
+        self._set_workload_version()
 
         # Open port
         try:
@@ -1042,6 +1046,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         # Bootstrap the cluster in the leader unit.
         self._start_primary(event)
+
+    def _set_workload_version(self):
+        _psql_version = self._patroni.get_postgresql_version()
+        self.unit.set_workload_version(_psql_version)
+        if self.unit.is_leader():
+            self.app_peer_data.update({"database-version": self._patroni.get_postgresql_version()})
 
     def _setup_exporter(self) -> None:
         """Set up postgresql_exporter options."""
