@@ -46,15 +46,6 @@ class PostgreSQLUpgrade(DataUpgrade):
         super().__init__(charm, model, **kwargs)
         self.charm = charm
         self._on_upgrade_charm_check_legacy()
-        self.framework.observe(
-            self.on.upgrade_finished, self._on_upgrade_finished
-        )
-        self.framework.observe(self.on.cluster_topology_change, self._on_cluster_topology_change)
-
-    def _on_upgrade_finished(self, _) -> None:
-        """Handler for `upgrade-finished` events."""
-        logger.info("f--------------------------------------------")
-        self.charm._set_workload_version()
 
     @override
     def build_upgrade_stack(self) -> List[int]:
@@ -152,8 +143,7 @@ class PostgreSQLUpgrade(DataUpgrade):
         self.charm.backup.start_stop_pgbackrest_service()
 
         try:
-            logger.info(f"================++++++++++++++++++++++++   {self.charm._patroni.get_postgresql_version()}")
-            self.charm._set_workload_version(
+            self.charm.unit.set_workload_version(
                 self.charm._patroni.get_postgresql_version() or "unset"
             )
         except TypeError:

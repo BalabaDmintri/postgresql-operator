@@ -1014,13 +1014,10 @@ class DataUpgrade(Object, ABC):
 
     def _on_upgrade_finished(self, _) -> None:
         """Handler for `upgrade-finished` events."""
-        logger.info(f"+++++++++++++++++++++++++++++++++  _on_upgrade_finished 1")
         if self.substrate == "vm" or not self.peer_relation:
             return
-        logger.info(f"+++++++++++++++++++++++++++++++++  _on_upgrade_finished 2")
         # Emit the upgrade relation changed event in the leader to update the upgrade_stack.
         if self.charm.unit.is_leader():
-            logger.info(f"+++++++++++++++++++++++++++++++++  _on_upgrade_finished 3")
             self.charm.on[self.relation_name].relation_changed.emit(
                 self.model.get_relation(self.relation_name)
             )
@@ -1028,9 +1025,7 @@ class DataUpgrade(Object, ABC):
         # This hook shouldn't run for the last unit (the first that is upgraded). For that unit it
         # should be done through an action after the upgrade success on that unit is double-checked.
         unit_number = int(self.charm.unit.name.split("/")[1])
-        logger.info(f"+++++++++++++++++++++++++++++++++  _on_upgrade_finished 4")
         if unit_number == len(self.peer_relation.units):
-            logger.info(f"+++++++++++++++++++++++++++++++++  _on_upgrade_finished 5")
             logger.info(
                 f"{self.charm.unit.name} unit upgraded. Evaluate and run `resume-upgrade` action to continue upgrade"
             )

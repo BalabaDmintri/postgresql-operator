@@ -157,6 +157,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
         self.framework.observe(self.on.get_primary_action, self._on_get_primary)
         self.framework.observe(self.on[PEER].relation_changed, self._on_peer_relation_changed)
+        self.framework.observe(self.on["upgrade"].relation_changed, self._on_peer_upgrade_relation_changed)
         self.framework.observe(self.on.secret_changed, self._on_peer_relation_changed)
         self.framework.observe(self.on.secret_remove, self._on_peer_relation_changed)
         self.framework.observe(self.on[PEER].relation_departed, self._on_peer_relation_departed)
@@ -469,6 +470,20 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # a failed switchover, so wait until the primary is elected.
         if self.primary_endpoint:
             self._update_relation_endpoints()
+
+    def _on_peer_upgrade_relation_changed(self, event: HookEvent):
+        if not self.unit.is_leader():
+            return
+
+        if self.upgrade.idle:
+            logger.debug("Defer _on_peer_upgrade_relation_changed: upgrade in progress")
+            event.defer()
+            return
+
+        peer_db_version = self.app_peer_data.get("database-version")
+        logger.info(f"==========================_on_peer_upgrade_relation_changed=========  peer_db_version = {peer_db_version}")
+        logger.info(f"==========================_on_peer_upgrade_relation_changed=========  _patroni = {self._patroni.get_postgresql_version()}")
+        self._set_workload_version(self._patroni.get_postgresql_version())
 
     def _on_peer_relation_changed(self, event: HookEvent):
         """Reconfigure cluster members when something changes."""
