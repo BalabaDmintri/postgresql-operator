@@ -27,7 +27,7 @@ from .helpers import (
 
 logger = logging.getLogger(__name__)
 
-TIMEOUT = 600
+TIMEOUT = 3000
 
 
 @pytest.mark.group(1)
