@@ -1024,7 +1024,7 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         self.unit_peer_data.update({"ip": self.get_hostname_by_unit(None)})
 
-        self._set_workload_version()
+        self._set_workload_version(self._patroni.get_postgresql_version())
 
         # Open port
         try:
@@ -1041,13 +1041,12 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
         # Bootstrap the cluster in the leader unit.
         self._start_primary(event)
 
-    def _set_workload_version(self):
-        _psql_version = self._patroni.get_postgresql_version()
-        logger.info(f"-------------------------------------------- _psql_version = {_psql_version}")
-        self.unit.set_workload_version(_psql_version)
+    def _set_workload_version(self, psql_version):
+        logger.info(f"-------------------------------------------- _psql_version = {psql_version}")
+        self.unit.set_workload_version(psql_version)
         logger.info(f"-------------------------------------------- is_leader = {self.unit.is_leader()}")
         if self.unit.is_leader():
-            self.app_peer_data.update({"database-version": self._patroni.get_postgresql_version()})
+            self.app_peer_data.update({"database-version": psql_version})
 
     def _setup_exporter(self) -> None:
         """Set up postgresql_exporter options."""
