@@ -1043,7 +1043,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
     def _set_workload_version(self):
         _psql_version = self._patroni.get_postgresql_version()
+        logger.info(f"-------------------------------------------- _psql_version = {_psql_version}")
         self.unit.set_workload_version(_psql_version)
+        logger.info(f"-------------------------------------------- is_leader = {self.unit.is_leader()}")
         if self.unit.is_leader():
             self.app_peer_data.update({"database-version": self._patroni.get_postgresql_version()})
 

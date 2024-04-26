@@ -52,6 +52,7 @@ class PostgreSQLUpgrade(DataUpgrade):
 
     def _on_upgrade_finished(self, _) -> None:
         """Handler for `upgrade-finished` events."""
+        logger.info("f--------------------------------------------")
         self.charm._set_workload_version()
 
     @override
