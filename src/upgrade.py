@@ -47,7 +47,7 @@ class PostgreSQLUpgrade(DataUpgrade):
         self.charm = charm
         self._on_upgrade_charm_check_legacy()
         self.framework.observe(
-            self.on.upgrade_charm, self._on_upgrade_granted
+            self.on.upgrade_finished, self._on_upgrade_finished
         )
 
     def _on_upgrade_finished(self, _) -> None:
