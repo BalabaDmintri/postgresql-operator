@@ -85,7 +85,6 @@ from constants import (
     UNIT_SCOPE,
     USER,
     USER_PASSWORD_KEY,
-    PEER_UPGRADE,
 )
 from relations.db import EXTENSIONS_BLOCKING_MESSAGE, DbProvides
 from relations.postgresql_provider import PostgreSQLProvider
