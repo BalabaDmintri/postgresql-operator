@@ -175,6 +175,9 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
             relation_name="upgrade",
             substrate="vm",
         )
+        self.framework.observe(
+            self.upgrade.on.upgrade_finished, self._on_upgrade_finished
+        )
         self.postgresql_client_relation = PostgreSQLProvider(self)
         self.legacy_db_relation = DbProvides(self, admin=False)
         self.legacy_db_admin_relation = DbProvides(self, admin=True)
@@ -1209,6 +1212,8 @@ class PostgresqlOperatorCharm(TypedCharmBase[CharmConfig]):
 
         event.set_results({"password": password})
 
+    def _on_upgrade_finished(self, _) -> None:
+        self._set_workload_version(self._patroni.get_postgresql_version())
     def _on_update_status(self, _) -> None:
         """Update the unit status message and users list in the database."""
         if not self._can_run_on_update_status():
