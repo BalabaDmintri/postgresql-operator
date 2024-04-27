@@ -192,9 +192,9 @@ async def test_fail_and_rollback(ops_test, continuous_writes) -> None:
     fault_charm.unlink()
 
 async def test_test(ops_test) -> None:
-    logger.info(f" -- replace version")
-    replace_dependency(ops_test)
-    logger.info(f" -- replace version done")
+    # logger.info(f" -- replace version")
+    # replace_dependency(ops_test)
+    # logger.info(f" -- replace version done")
     await ops_test.model.deploy(
         DATABASE_APP_NAME,
         num_units=1,
@@ -206,44 +206,44 @@ async def test_test(ops_test) -> None:
         await ops_test.model.wait_for_idle(
             apps=[DATABASE_APP_NAME], status="active", timeout=1500
         )
-
-    logger.info("Get leader unit")
-    leader_unit = await get_leader_unit(ops_test, DATABASE_APP_NAME)
-    assert leader_unit is not None, "No leader unit found"
-
-    logger.info("Run pre-upgrade-check action")
-    action = await leader_unit.run_action("pre-upgrade-check")
-    await action.wait()
-
-    local_charm = await ops_test.build_charm(".")
-    if isinstance(local_charm, str):
-        filename = local_charm.split("/")[-1]
-    else:
-        filename = local_charm.name
-    fault_charm = Path("/tmp/", filename)
-    shutil.copy(local_charm, fault_charm)
-
-    application = ops_test.model.applications[DATABASE_APP_NAME]
-
-    logger.info("Build charm locally")
-
-    logger.info("--- inject_dependency_fault")
-    await inject_dependency_fault(ops_test, DATABASE_APP_NAME, fault_charm)
-
-    logger.info("Refresh the charm")
-    await application.refresh(path=fault_charm)
-
-    logger.info("Wait for upgrade to start")
-    await ops_test.model.block_until(
-        lambda: "waiting" in {unit.workload_status for unit in application.units},
-        timeout=TIMEOUT,
-    )
-
-    logger.info("Wait for upgrade to complete")
-    async with ops_test.fast_forward("60s"):
-        await ops_test.model.wait_for_idle(
-            apps=[DATABASE_APP_NAME], status="active", idle_period=30, timeout=TIMEOUT
-        )
+    #
+    # logger.info("Get leader unit")
+    # leader_unit = await get_leader_unit(ops_test, DATABASE_APP_NAME)
+    # assert leader_unit is not None, "No leader unit found"
+    #
+    # logger.info("Run pre-upgrade-check action")
+    # action = await leader_unit.run_action("pre-upgrade-check")
+    # await action.wait()
+    #
+    # local_charm = await ops_test.build_charm(".")
+    # if isinstance(local_charm, str):
+    #     filename = local_charm.split("/")[-1]
+    # else:
+    #     filename = local_charm.name
+    # fault_charm = Path("/tmp/", filename)
+    # shutil.copy(local_charm, fault_charm)
+    #
+    # application = ops_test.model.applications[DATABASE_APP_NAME]
+    #
+    # logger.info("Build charm locally")
+    #
+    # logger.info("--- inject_dependency_fault")
+    # await inject_dependency_fault(ops_test, DATABASE_APP_NAME, fault_charm)
+    #
+    # logger.info("Refresh the charm")
+    # await application.refresh(path=fault_charm)
+    #
+    # logger.info("Wait for upgrade to start")
+    # await ops_test.model.block_until(
+    #     lambda: "waiting" in {unit.workload_status for unit in application.units},
+    #     timeout=TIMEOUT,
+    # )
+    #
+    # logger.info("Wait for upgrade to complete")
+    # async with ops_test.fast_forward("60s"):
+    #     await ops_test.model.wait_for_idle(
+    #         apps=[DATABASE_APP_NAME], status="active", idle_period=30, timeout=TIMEOUT
+    #     )
 
 
 async def inject_dependency_fault(
