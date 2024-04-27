@@ -254,8 +254,8 @@ async def inject_dependency_fault(
     loaded_dependency_dict = json.loads(dependencies)
     if "snap" not in loaded_dependency_dict:
         loaded_dependency_dict["snap"] = {"dependencies": {}, "name": "charmed-postgresql"}
-    loaded_dependency_dict["snap"]["upgrade_supported"] = "^13"
-    loaded_dependency_dict["snap"]["version"] = "13.0"
+    loaded_dependency_dict["snap"]["upgrade_supported"] = "^14"
+    loaded_dependency_dict["snap"]["version"] = "14.10"
 
     # Overwrite dependency.json with incompatible version.
     with zipfile.ZipFile(charm_file, mode="a") as charm_zip:
