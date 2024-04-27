@@ -209,6 +209,9 @@ async def test_test(ops_test) -> None:
     logger.info("Build charm locally")
     charm = await ops_test.build_charm(".")
 
+    logger.info("--- inject_dependency_fault")
+    await inject_dependency_fault(ops_test, DATABASE_APP_NAME, charm)
+
     logger.info("Refresh the charm")
     await application.refresh(path=charm)
 
