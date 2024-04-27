@@ -265,7 +265,8 @@ async def inject_dependency_fault(
         charm_zip.writestr("src/dependency.json", json.dumps(loaded_dependency_dict))
 
 
-def replace_dependency() -> None:
+def replace_dependency(ops_test) -> None:
+    logger.info(f"    {ops_test.tmp_path()}")
     with open("../../../src/dependency.json", "r+") as jsonFile:
         data = json.load(jsonFile)
         data["snap"]["upgrade_supported"] = "^12"
