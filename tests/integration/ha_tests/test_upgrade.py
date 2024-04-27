@@ -192,6 +192,9 @@ async def test_fail_and_rollback(ops_test, continuous_writes) -> None:
     fault_charm.unlink()
 
 async def test_test(ops_test) -> None:
+    logger.info(f" -- replace version")
+    replace_dependency()
+    logger.info(f" -- replace version done")
     await ops_test.model.deploy(
         DATABASE_APP_NAME,
         num_units=1,
@@ -254,9 +257,20 @@ async def inject_dependency_fault(
     loaded_dependency_dict = json.loads(dependencies)
     if "snap" not in loaded_dependency_dict:
         loaded_dependency_dict["snap"] = {"dependencies": {}, "name": "charmed-postgresql"}
-    loaded_dependency_dict["snap"]["upgrade_supported"] = "^14"
-    loaded_dependency_dict["snap"]["version"] = "14.10"
+    loaded_dependency_dict["snap"]["upgrade_supported"] = "^13"
+    loaded_dependency_dict["snap"]["version"] = "13.0"
 
     # Overwrite dependency.json with incompatible version.
     with zipfile.ZipFile(charm_file, mode="a") as charm_zip:
         charm_zip.writestr("src/dependency.json", json.dumps(loaded_dependency_dict))
+
+
+def replace_dependency() -> None:
+    with open("dependency.json", "r+") as jsonFile:
+        data = json.load(jsonFile)
+        data["snap"]["upgrade_supported"] = "^12"
+        data["snap"]["version"] = "12.0"
+
+        jsonFile.seek(0)  # rewind
+        json.dump(data, jsonFile, indent=4)
+        jsonFile.truncate()
