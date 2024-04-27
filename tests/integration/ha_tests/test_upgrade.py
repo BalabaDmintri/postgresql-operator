@@ -204,16 +204,31 @@ async def test_test(ops_test) -> None:
             apps=[DATABASE_APP_NAME], status="active", timeout=1500
         )
 
+    logger.info("Get leader unit")
+    leader_unit = await get_leader_unit(ops_test, DATABASE_APP_NAME)
+    assert leader_unit is not None, "No leader unit found"
+
+    logger.info("Run pre-upgrade-check action")
+    action = await leader_unit.run_action("pre-upgrade-check")
+    await action.wait()
+
+    local_charm = await ops_test.build_charm(".")
+    if isinstance(local_charm, str):
+        filename = local_charm.split("/")[-1]
+    else:
+        filename = local_charm.name
+    fault_charm = Path("/tmp/", filename)
+    shutil.copy(local_charm, fault_charm)
+
     application = ops_test.model.applications[DATABASE_APP_NAME]
 
     logger.info("Build charm locally")
-    charm = await ops_test.build_charm(".")
 
     logger.info("--- inject_dependency_fault")
-    await inject_dependency_fault(ops_test, DATABASE_APP_NAME, charm)
+    await inject_dependency_fault(ops_test, DATABASE_APP_NAME, fault_charm)
 
     logger.info("Refresh the charm")
-    await application.refresh(path=charm)
+    await application.refresh(path=fault_charm)
 
     logger.info("Wait for upgrade to start")
     await ops_test.model.block_until(
