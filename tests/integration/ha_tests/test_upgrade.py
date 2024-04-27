@@ -266,8 +266,10 @@ async def inject_dependency_fault(
 
 
 def replace_dependency(ops_test) -> None:
-    logger.info(f"    {ops_test.tmp_path}")
-    with open("../../../src/dependency.json", "r+") as jsonFile:
+    charm_path = Path(".")
+    logger.info(f"-    {charm_path}")
+    logger.info(f"-    {ops_test.tmp_path}")
+    with open(f"{charm_path}/src/dependency.json", "r+") as jsonFile:
         data = json.load(jsonFile)
         data["snap"]["upgrade_supported"] = "^12"
         data["snap"]["version"] = "12.0"
