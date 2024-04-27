@@ -266,7 +266,7 @@ async def inject_dependency_fault(
 
 
 def replace_dependency(ops_test) -> None:
-    logger.info(f"    {ops_test.tmp_path()}")
+    logger.info(f"    {ops_test.tmp_path}")
     with open("../../../src/dependency.json", "r+") as jsonFile:
         data = json.load(jsonFile)
         data["snap"]["upgrade_supported"] = "^12"
