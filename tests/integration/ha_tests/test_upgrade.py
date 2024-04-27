@@ -266,7 +266,7 @@ async def inject_dependency_fault(
 
 
 def replace_dependency() -> None:
-    with open("../../../dependency.json", "r+") as jsonFile:
+    with open("../../../src/dependency.json", "r+") as jsonFile:
         data = json.load(jsonFile)
         data["snap"]["upgrade_supported"] = "^12"
         data["snap"]["version"] = "12.0"
