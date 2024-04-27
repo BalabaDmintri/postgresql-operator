@@ -193,7 +193,7 @@ async def test_fail_and_rollback(ops_test, continuous_writes) -> None:
 
 async def test_test(ops_test) -> None:
     logger.info(f" -- replace version")
-    replace_dependency()
+    replace_dependency(ops_test)
     logger.info(f" -- replace version done")
     await ops_test.model.deploy(
         DATABASE_APP_NAME,
