@@ -194,11 +194,12 @@ async def test_fail_and_rollback(ops_test, continuous_writes) -> None:
 async def test_test(ops_test) -> None:
     # logger.info(f" -- replace version")
     # replace_dependency(ops_test)
+    charm = await ops_test.build_charm(".")
     # logger.info(f" -- replace version done")
     await ops_test.model.deploy(
-        DATABASE_APP_NAME,
+        charm,
         num_units=1,
-        channel="14/edge",
+        application_name=DATABASE_APP_NAME,
         config={"profile": "testing"},
     )
     logger.info("Wait for applications to become active")
