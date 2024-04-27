@@ -38,6 +38,7 @@ SERVICE_NAME = "snap.charmed-postgresql.patroni.service"
 PATRONI_SERVICE_DEFAULT_PATH = f"/etc/systemd/system/{SERVICE_NAME}"
 RESTART_CONDITION = "no"
 ORIGINAL_RESTART_CONDITION = "always"
+SECOND_APPLICATION = "second-cluster"
 
 
 class MemberNotListedOnClusterError(Exception):
