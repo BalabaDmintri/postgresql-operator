@@ -36,10 +36,10 @@ POSTGRESQL_SNAP_NAME = "charmed-postgresql"
 SNAP_PACKAGES = [
     (
         "postgresql",
-        {"channel": "latest/stable", "name": POSTGRESQL_SNAP_NAME},
+        {"channel": "latest/stable"},
     )
 ]
-#"revision": {"aarch64": "110", "x86_64": "111"},
+#"revision": {"aarch64": "9.3.25", "x86_64": "9.3.25"},
 SNAP_COMMON_PATH = "/var/snap/charmed-postgresql/common"
 SNAP_CURRENT_PATH = "/var/snap/charmed-postgresql/current"
 
