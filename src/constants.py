@@ -35,11 +35,11 @@ PGBACKREST_EXECUTABLE = "charmed-postgresql.pgbackrest"
 POSTGRESQL_SNAP_NAME = "charmed-postgresql"
 SNAP_PACKAGES = [
     (
-        "postgresql",
-        {"channel": "latest/stable"},
+        POSTGRESQL_SNAP_NAME,
+        {"revision": {"aarch64": "103", "x86_64": "111"}, "channel": "14/stable"},
     )
 ]
-#"revision": {"aarch64": "9.3.25", "x86_64": "9.3.25"},
+
 SNAP_COMMON_PATH = "/var/snap/charmed-postgresql/common"
 SNAP_CURRENT_PATH = "/var/snap/charmed-postgresql/current"
 
