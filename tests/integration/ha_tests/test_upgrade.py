@@ -191,6 +191,39 @@ async def test_fail_and_rollback(ops_test, continuous_writes) -> None:
     # Remove fault charm file.
     fault_charm.unlink()
 
+async def test_test(ops_test) -> None:
+    await ops_test.model.deploy(
+        DATABASE_APP_NAME,
+        num_units=1,
+        channel="14/edge",
+        config={"profile": "testing"},
+    )
+    logger.info("Wait for applications to become active")
+    async with ops_test.fast_forward():
+        await ops_test.model.wait_for_idle(
+            apps=[DATABASE_APP_NAME], status="active", timeout=1500
+        )
+
+    application = ops_test.model.applications[DATABASE_APP_NAME]
+
+    logger.info("Build charm locally")
+    charm = await ops_test.build_charm(".")
+
+    logger.info("Refresh the charm")
+    await application.refresh(path=charm)
+
+    logger.info("Wait for upgrade to start")
+    await ops_test.model.block_until(
+        lambda: "waiting" in {unit.workload_status for unit in application.units},
+        timeout=TIMEOUT,
+    )
+
+    logger.info("Wait for upgrade to complete")
+    async with ops_test.fast_forward("60s"):
+        await ops_test.model.wait_for_idle(
+            apps=[DATABASE_APP_NAME], status="active", idle_period=30, timeout=TIMEOUT
+        )
+
 
 async def inject_dependency_fault(
     ops_test: OpsTest, application_name: str, charm_file: Union[str, Path]
@@ -203,8 +236,8 @@ async def inject_dependency_fault(
     loaded_dependency_dict = json.loads(dependencies)
     if "snap" not in loaded_dependency_dict:
         loaded_dependency_dict["snap"] = {"dependencies": {}, "name": "charmed-postgresql"}
-    loaded_dependency_dict["snap"]["upgrade_supported"] = "^15"
-    loaded_dependency_dict["snap"]["version"] = "15.0"
+    loaded_dependency_dict["snap"]["upgrade_supported"] = "^13"
+    loaded_dependency_dict["snap"]["version"] = "13.0"
 
     # Overwrite dependency.json with incompatible version.
     with zipfile.ZipFile(charm_file, mode="a") as charm_zip:
