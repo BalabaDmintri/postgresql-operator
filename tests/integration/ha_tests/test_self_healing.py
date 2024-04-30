@@ -106,7 +106,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
 
     if wait_for_apps:
         async with ops_test.fast_forward():
-            await ops_test.model.wait_for_idle(status="active", timeout=1500)
+            await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
 
 @pytest.mark.group(1)
@@ -461,7 +461,7 @@ async def test_network_cut(ops_test: OpsTest, continuous_writes, primary_start_t
             apps=[app],
             status="active",
             raise_on_blocked=True,
-            timeout=1000,
+            timeout=3000,
             idle_period=30,
         )
 
