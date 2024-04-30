@@ -3,6 +3,7 @@
 # See LICENSE file for licensing details.
 import asyncio
 import logging
+from time import sleep
 
 import pytest
 from pip._vendor import requests
@@ -558,6 +559,8 @@ async def test_network_cut_without_ip_change(
     ), "Connection is not possible after network restore"
 
     await is_cluster_updated(ops_test, primary_name, use_ip_from_inside=True)
+    logger.info(f" ------------------ sleep")
+    sleep(60 * 10)
 
 
 @pytest.mark.group(1)
