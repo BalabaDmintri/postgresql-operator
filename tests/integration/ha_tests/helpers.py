@@ -917,9 +917,9 @@ async def add_unit_with_storage(ops_test, app, storage, is_blocked: bool = False
     add_unit_cmd = f"add-unit {app} --model={model_name} --attach-storage={storage}".split()
     return_code, _, _ = await ops_test.juju(*add_unit_cmd)
     assert return_code == 0, "Failed to add unit with storage"
-    assert is_blocked and blocked_message != "", "The blocked status check should be checked along with the message"
     async with ops_test.fast_forward():
         if is_blocked:
+            assert is_blocked and blocked_message != "", "The blocked status check should be checked along with the message"
             application = ops_test.model.applications[app]
             await ops_test.model.block_until(
                 lambda:  any(
