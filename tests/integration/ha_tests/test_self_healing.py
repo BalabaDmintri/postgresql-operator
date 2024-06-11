@@ -639,7 +639,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm):
         app=app,
         storage=second_storage,
         is_blocked=True,
-        blocked_message=ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE
+        blocked_message=ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE,
     )
 
     logger.info(f"remove unit {new_unit.name} with storage from application {SECOND_APPLICATION}")
