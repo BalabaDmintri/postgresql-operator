@@ -627,11 +627,11 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm):
     )
 
     connection_string, _ = await get_db_connection(ops_test, dbname=dbname)
-    logger.info("checking whether writes are increasing")
-    await are_writes_increasing(ops_test)
-
     logger.info("check test database data")
     await validate_test_data(connection_string)
+
+    logger.info("checking whether writes are increasing")
+    await are_writes_increasing(ops_test)
 
     logger.info("database scaling up to two units using third-party cluster storage")
     new_unit = await add_unit_with_storage(
