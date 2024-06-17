@@ -931,7 +931,6 @@ async def add_unit_with_storage(
                     and unit.workload_status_message == blocked_message
                     for unit in application.units
                 ),
-                # "blocked" in {unit.workload_status for unit in application.units},
                 timeout=1500,
             )
         else:

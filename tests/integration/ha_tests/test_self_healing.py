@@ -65,8 +65,8 @@ APP_NAME = METADATA["name"]
 PATRONI_PROCESS = "/snap/charmed-postgresql/[0-9]*/usr/bin/patroni"
 POSTGRESQL_PROCESS = "postgres"
 DB_PROCESSES = [POSTGRESQL_PROCESS, PATRONI_PROCESS]
-ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE = (
-    "Please choose one endpoint to use. No need to relate all of them simultaneously!"
+STORAGE_BELONGS_TO_THIRD_PARTY_CLUSTER_BLOCKING_MESSAGE = (
+    "Failed to start postgresql. The storage belongs to a third-party cluster"
 )
 
 
@@ -639,16 +639,17 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm):
         app=app,
         storage=second_storage,
         is_blocked=True,
-        blocked_message=ENDPOINT_SIMULTANEOUSLY_BLOCKING_MESSAGE,
+        blocked_message=STORAGE_BELONGS_TO_THIRD_PARTY_CLUSTER_BLOCKING_MESSAGE,
     )
 
     logger.info(f"remove unit {new_unit.name} with storage from application {SECOND_APPLICATION}")
     await ops_test.model.destroy_units(new_unit.name)
 
-    await are_writes_increasing(ops_test)
-
     logger.info("check test database data")
     await validate_test_data(connection_string)
+
+    logger.info("checking whether writes are increasing")
+    await are_writes_increasing(ops_test)
 
     # Scale up to two units.
     logger.info("scaling database to two unit")
