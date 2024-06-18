@@ -644,6 +644,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm):
 
     logger.info(f"remove unit {new_unit.name} with storage from application {SECOND_APPLICATION}")
     await ops_test.model.destroy_units(new_unit.name)
+    await ops_test.model.wait_for_idle(apps=[app], status="active", timeout=1500)
 
     logger.info("check test database data")
     await validate_test_data(connection_string)
