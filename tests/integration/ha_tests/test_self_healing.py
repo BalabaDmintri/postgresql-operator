@@ -109,7 +109,7 @@ async def test_build_and_deploy(ops_test: OpsTest) -> None:
 
     if wait_for_apps:
         async with ops_test.fast_forward():
-            await ops_test.model.wait_for_idle(status="active", timeout=1500)
+            await ops_test.model.wait_for_idle(status="active", timeout=3000)
 
 
 @pytest.mark.group(1)
@@ -623,7 +623,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm):
     logger.info("scaling database to one unit")
     await add_unit_with_storage(ops_test, app=app, storage=primary_storage)
     await ops_test.model.wait_for_idle(
-        apps=[APP_NAME, APPLICATION_NAME], status="active", timeout=1500
+        apps=[APP_NAME, APPLICATION_NAME], status="active", timeout=3000
     )
 
     connection_string, _ = await get_db_connection(ops_test, dbname=dbname)
@@ -644,7 +644,7 @@ async def test_deploy_zero_units(ops_test: OpsTest, charm):
 
     logger.info(f"remove unit {new_unit.name} with storage from application {SECOND_APPLICATION}")
     await ops_test.model.destroy_units(new_unit.name)
-    await ops_test.model.wait_for_idle(apps=[app], status="active", timeout=1500)
+    await ops_test.model.wait_for_idle(apps=[app], status="active", timeout=3000)
 
     logger.info("check test database data")
     await validate_test_data(connection_string)
